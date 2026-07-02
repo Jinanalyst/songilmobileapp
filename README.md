@@ -45,11 +45,25 @@ cd android
 ```
 
 ## 서명 키스토어 ⚠️
-- 파일: `android/songil-release.keystore` (alias `songil`)
-- 비밀번호: 스토어/키 모두 `songil2026`  ← **출시 전 반드시 안전한 값으로 교체하고
-  키스토어를 별도 백업**하세요. 이 키를 잃어버리면 Play 스토어 앱 업데이트가 불가능합니다.
-- 서명 값은 `app/build.gradle` 에서 `SONGIL_STORE_FILE`, `SONGIL_STORE_PASSWORD`,
-  `SONGIL_KEY_ALIAS`, `SONGIL_KEY_PASSWORD` gradle 프로퍼티로 덮어쓸 수 있습니다.
+- 파일: `android/songil-upload.keystore` (alias `songil-upload`)
+- 비밀번호는 `android/keystore.properties` 에 저장 (storePassword / keyPassword).
+- **키스토어 파일과 keystore.properties 는 git 에 포함되지 않습니다**(`.gitignore`).
+  이 두 파일을 반드시 **안전한 곳에 별도 백업**하세요. 잃어버리면 Play 스토어 앱
+  업데이트가 영구적으로 불가능합니다.
+- 새 환경에서 빌드하려면 `android/keystore.properties` 를 아래 형식으로 만들면 됩니다:
+  ```
+  storeFile=../songil-upload.keystore
+  storePassword=<비밀번호>
+  keyAlias=songil-upload
+  keyPassword=<비밀번호>
+  ```
+
+## 구글/카카오 OAuth 활성화 (남은 설정)
+간편 로그인은 바로 동작합니다. 소셜 로그인을 켜려면:
+1. Supabase 대시보드 → Authentication → URL Configuration → **Redirect URLs** 에
+   `online.handway.songil://auth/callback` 추가.
+2. (사이트에서 이미 구글/카카오 provider 를 쓰고 있으므로 provider 설정은 그대로 사용.)
+- 앱에는 이미 딥링크 스킴(`online.handway.songil://`)이 AndroidManifest 에 등록돼 있습니다.
 
 ## 출시 전 다듬을 것 (권장)
 - 앱 아이콘/스플래시를 손길 로고로 교체 (`android/app/src/main/res/mipmap-*`)
