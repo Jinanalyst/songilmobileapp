@@ -1,0 +1,54 @@
+// 구글/카카오 OAuth (Supabase). 네이티브 앱에서는 시스템 브라우저 + 딥링크로 콜백을 받고,
+// 웹(개발 프리뷰)에서는 표준 리디렉트를 사용한다.
+import { Capacitor } from "@capacitor/core";
+import { supabase } from "./supabase";
+import { APP_REDIRECT } from "./config";
+
+export async function signInWithOAuth(provider: "google" | "kakao") {
+  const native = Capacitor.isNativePlatform();
+
+  if (!native) {
+    // 웹: 현재 오리진으로 리디렉트 (Supabase Redirect URLs 에 오리진 등록 필요)
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    });
+    return;
+  }
+
+  // 네이티브: 앱 딥링크로 콜백
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: APP_REDIRECT, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  if (data?.url) {
+    const { Browser } = await import("@capacitor/browser");
+    await Browser.open({ url: data.url });
+  }
+}
+
+// 앱이 딥링크(online.handway.songil://auth/callback?...)로 열릴 때 세션 교환.
+export async function initDeepLinkAuth() {
+  if (!Capacitor.isNativePlatform()) return;
+  const { App } = await import("@capacitor/app");
+  const { Browser } = await import("@capacitor/browser");
+  App.addListener("appUrlOpen", async ({ url }) => {
+    if (!url.includes("auth/callback")) return;
+    try {
+      const u = new URL(url);
+      const code = u.searchParams.get("code");
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code);
+      }
+    } catch {
+      /* noop */
+    } finally {
+      try {
+        await Browser.close();
+      } catch {
+        /* noop */
+      }
+    }
+  });
+}

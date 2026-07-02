@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build-output/
+
+# capacitor copies web assets into the android project at build time
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+
+# signing keystore & secrets (NEVER commit — keep a private backup)
+*.keystore
+*.jks
+keystore.properties
+local.properties
+
+# gradle / android build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/
+.gradle/
+
+# misc
+.DS_Store
+*.log
+.env
+.env.local
