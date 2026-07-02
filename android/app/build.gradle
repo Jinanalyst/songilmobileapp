@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// 출시 서명 정보를 keystore.properties (git 미포함) 에서 로드한다.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+
 android {
     namespace "online.handway.songil"
     compileSdk rootProject.ext.compileSdkVersion
@@ -18,10 +25,10 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file(project.hasProperty('SONGIL_STORE_FILE') ? SONGIL_STORE_FILE : '../songil-release.keystore')
-            storePassword project.hasProperty('SONGIL_STORE_PASSWORD') ? SONGIL_STORE_PASSWORD : 'songil2026'
-            keyAlias project.hasProperty('SONGIL_KEY_ALIAS') ? SONGIL_KEY_ALIAS : 'songil'
-            keyPassword project.hasProperty('SONGIL_KEY_PASSWORD') ? SONGIL_KEY_PASSWORD : 'songil2026'
+            storeFile file(keystoreProps.getProperty('storeFile', '../songil-upload.keystore'))
+            storePassword keystoreProps.getProperty('storePassword', '')
+            keyAlias keystoreProps.getProperty('keyAlias', 'songil-upload')
+            keyPassword keystoreProps.getProperty('keyPassword', '')
         }
     }
     buildTypes {
