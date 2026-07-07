@@ -141,6 +141,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             loggedIn: true,
             name: s.session.name || meta.full_name || meta.name || "",
             email: u.email ?? s.session.email,
+            phone: s.session.phone || meta.phone || "",
+            address: s.session.address || meta.address || "",
+            addressDetail: s.session.addressDetail || meta.address_detail || "",
             provider: s.session.provider ?? "google",
           },
         }));
@@ -159,6 +162,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             loggedIn: true,
             name: s.session.name || meta.full_name || meta.name || "",
             email: u.email ?? s.session.email,
+            phone: s.session.phone || meta.phone || "",
+            address: s.session.address || meta.address || "",
+            addressDetail: s.session.addressDetail || meta.address_detail || "",
             provider: prov,
           },
         }));

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useStore } from "../store";
+import { saveProfileToAccount } from "../profile";
 import { AppBar, Field } from "../components/ui";
 
 // 이미지를 정사각형 ~256px JPEG data URL 로 리사이즈 (localStorage 용량 절약)
@@ -54,10 +55,16 @@ export default function ProfileEdit({ onBack }: { onBack: () => void }) {
     }
   }
 
-  function save() {
+  async function save() {
     updateProfile({ name: name.trim(), phone: phone.trim(), address, addressDetail, photo });
+    // 로그인 계정이면 이름·연락처·주소를 계정(user_metadata)에도 저장 → 기기 변경 시 유지
+    try {
+      await saveProfileToAccount({ name: name.trim(), phone: phone.trim(), address, addressDetail });
+    } catch {
+      /* 로컬 저장은 이미 완료 */
+    }
     setSaved(true);
-    setTimeout(onBack, 600);
+    setTimeout(onBack, 700);
   }
 
   return (
