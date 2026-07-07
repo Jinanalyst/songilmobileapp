@@ -43,7 +43,7 @@ type Session = {
   name: string;
   phone: string;
   email: string;
-  provider: "kakao" | "google" | "simple" | null;
+  provider: "kakao" | "google" | "email" | "simple" | null;
 };
 
 type Submissions = {
@@ -57,6 +57,7 @@ type Store = {
   submissions: Submissions;
   seeIntro: () => void;
   loginSimple: (name: string, phone: string) => void;
+  guestBrowse: () => void;
   setAuthUser: (name: string, email: string, provider: "kakao" | "google") => void;
   chooseRole: (role: Role) => void;
   logout: () => Promise<void>;
@@ -138,7 +139,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const u = sess?.user;
       if (u) {
         const meta = u.user_metadata ?? {};
-        const prov = (u.app_metadata?.provider as "kakao" | "google") ?? "google";
+        const prov =
+          (u.app_metadata?.provider as "kakao" | "google" | "email") ?? "email";
         setState((s) => ({
           ...s,
           session: {
@@ -168,6 +170,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           provider: "simple",
           name: name.trim() || "회원",
           phone: phone.trim(),
+        },
+      })),
+    guestBrowse: () =>
+      setState((s) => ({
+        ...s,
+        session: {
+          ...s.session,
+          loggedIn: true,
+          onboarded: true,
+          role: "guest",
+          provider: "simple",
+          name: s.session.name || "게스트",
         },
       })),
     setAuthUser: (name, email, provider) =>

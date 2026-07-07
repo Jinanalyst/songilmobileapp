@@ -4,6 +4,25 @@ import { Capacitor } from "@capacitor/core";
 import { supabase } from "./supabase";
 import { APP_REDIRECT } from "./config";
 
+// ── 이메일/비밀번호 회원가입 ──
+// 반환: { needsConfirm: true } 이면 이메일 인증 후 로그인 필요(Supabase에서 이메일 확인 ON).
+//       { needsConfirm: false } 이면 즉시 세션 발급 → onAuthStateChange 가 로그인 처리.
+export async function signUpEmail(name: string, email: string, password: string) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: name } },
+  });
+  if (error) throw error;
+  return { needsConfirm: !data.session };
+}
+
+// ── 이메일/비밀번호 로그인 ──
+export async function signInEmail(email: string, password: string) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
 export async function signInWithOAuth(provider: "google" | "kakao") {
   const native = Capacitor.isNativePlatform();
 
