@@ -44,7 +44,14 @@ type Session = {
   phone: string;
   email: string;
   provider: "kakao" | "google" | "email" | "simple" | null;
+  photo: string; // 프로필 사진 (data URL, 선택)
+  address: string; // 고객 기본 주소
+  addressDetail: string; // 상세 주소
 };
+
+export type ProfilePatch = Partial<
+  Pick<Session, "name" | "phone" | "address" | "addressDetail" | "photo">
+>;
 
 type Submissions = {
   reservations: SavedReservation[];
@@ -59,6 +66,7 @@ type Store = {
   loginSimple: (name: string, phone: string) => void;
   guestBrowse: () => void;
   setAuthUser: (name: string, email: string, provider: "kakao" | "google") => void;
+  updateProfile: (patch: ProfilePatch) => void;
   chooseRole: (role: Role) => void;
   logout: () => Promise<void>;
   saveReservation: (r: SavedReservation) => void;
@@ -77,6 +85,9 @@ const DEFAULT_SESSION: Session = {
   phone: "",
   email: "",
   provider: null,
+  photo: "",
+  address: "",
+  addressDetail: "",
 };
 
 type Persisted = { session: Session; submissions: Submissions };
@@ -200,6 +211,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...s,
         session: { ...s.session, role, onboarded: true },
       })),
+    updateProfile: (patch) =>
+      setState((s) => ({ ...s, session: { ...s.session, ...patch } })),
     logout: async () => {
       try {
         await supabase.auth.signOut();

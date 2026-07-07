@@ -9,7 +9,6 @@ import Book from "./screens/Book";
 import Partners from "./screens/Partners";
 import Consult from "./screens/Consult";
 import Account from "./screens/Account";
-import PartnerApply from "./screens/PartnerApply";
 
 type Tab = "account" | "partners" | "book" | "consult";
 
@@ -23,16 +22,10 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 function Main() {
   const [tab, setTab] = useState<Tab>("book");
   const [bookKey, setBookKey] = useState(0);
-  const [applyOpen, setApplyOpen] = useState(false);
 
   return (
     <div className="app-shell">
-      {tab === "account" &&
-        (applyOpen ? (
-          <PartnerApply onBack={() => setApplyOpen(false)} />
-        ) : (
-          <Account onLogout={() => setTab("book")} onOpenApply={() => setApplyOpen(true)} />
-        ))}
+      {tab === "account" && <Account onLogout={() => setTab("book")} />}
       {tab === "partners" && <Partners onConsult={() => setTab("consult")} />}
       {tab === "book" && <Book key={bookKey} onDone={() => setTab("account")} />}
       {tab === "consult" && <Consult />}
@@ -44,7 +37,6 @@ function Main() {
             className={tab === t.id ? "active" : ""}
             onClick={() => {
               if (t.id === "book" && tab === "book") setBookKey((k) => k + 1);
-              if (t.id === "account") setApplyOpen(false);
               setTab(t.id);
             }}
           >
