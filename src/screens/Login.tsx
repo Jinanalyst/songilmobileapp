@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../store";
 import { signInWithOAuth } from "../oauth";
 
@@ -27,6 +27,21 @@ export default function Login() {
   const { guestBrowse } = useStore();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // 시스템 브라우저에서 돌아오면(취소/완료 무관) '이동 중' 상태를 풀어준다.
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    (async () => {
+      const { Capacitor } = await import("@capacitor/core");
+      if (!Capacitor.isNativePlatform()) return;
+      const { App } = await import("@capacitor/app");
+      const h = await App.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) setBusy(null);
+      });
+      cleanup = () => h.remove();
+    })();
+    return () => cleanup?.();
+  }, []);
 
   async function oauth(provider: "google" | "kakao") {
     setBusy(provider);

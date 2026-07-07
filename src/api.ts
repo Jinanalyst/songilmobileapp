@@ -1,18 +1,59 @@
 // handway.online 사이트 API 호출 — 예약/상담/파트너신청을 같은 Supabase DB 에 생성.
+// 네이티브 앱: CapacitorHttp 로 네이티브 요청(WebView CORS 회피).
+// 개발 프리뷰: 일반 fetch + Vite 프록시.
+import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { API_BASE } from "./config";
 import type { Review } from "./data";
 
+const native = Capacitor.isNativePlatform();
+
 async function post<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const url = `${API_BASE}${path}`;
+  if (native) {
+    const res = await CapacitorHttp.request({
+      method: "POST",
+      url,
+      headers: { "Content-Type": "application/json" },
+      data: body,
+    });
+    const data = typeof res.data === "string" ? safeParse(res.data) : res.data;
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error((data as { error?: string })?.error || "요청에 실패했어요.");
+    }
+    return data as T;
+  }
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error((data as { error?: string }).error || "요청에 실패했어요.");
-  }
+  if (!res.ok) throw new Error((data as { error?: string }).error || "요청에 실패했어요.");
   return data as T;
+}
+
+async function getJson(path: string): Promise<any | null> {
+  const url = `${API_BASE}${path}`;
+  try {
+    if (native) {
+      const res = await CapacitorHttp.request({ method: "GET", url });
+      if (res.status < 200 || res.status >= 300) return null;
+      return typeof res.data === "string" ? safeParse(res.data) : res.data;
+    }
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function safeParse(s: string): unknown {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return {};
+  }
 }
 
 // ── 예약 생성 (POST /api/reservations, 인증 불필요) ──
@@ -20,7 +61,7 @@ export type ReservationInput = {
   partnerId: string;
   serviceId: string;
   pyeong: number;
-  date: string; // YYYY-MM-DD
+  date: string;
   timeSlot: string;
   customerName: string;
   phone: string;
@@ -82,14 +123,8 @@ export async function createApplication(input: ApplicationInput) {
 
 // ── 파트너 공개 후기 (GET /api/partners/[id]/reviews) ──
 export async function fetchReviews(partnerId: string): Promise<Review[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/partners/${partnerId}/reviews`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.reviews ?? []) as Review[];
-  } catch {
-    return [];
-  }
+  const data = await getJson(`/api/partners/${partnerId}/reviews`);
+  return (data?.reviews ?? []) as Review[];
 }
 
 // ── 승인된 신규 파트너 (GET /api/partners) — 없으면 빈 배열 ──
@@ -101,12 +136,6 @@ export type ApprovedPartner = {
   intro: string;
 };
 export async function fetchApprovedPartners(): Promise<ApprovedPartner[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/partners`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.partners ?? []) as ApprovedPartner[];
-  } catch {
-    return [];
-  }
+  const data = await getJson("/api/partners");
+  return (data?.partners ?? []) as ApprovedPartner[];
 }
