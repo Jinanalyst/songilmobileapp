@@ -3,30 +3,35 @@
 // 개발 프리뷰: 일반 fetch + Vite 프록시.
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { API_BASE } from "./config";
+import { supabase } from "./supabase";
 import type { Review } from "./data";
 
 const native = Capacitor.isNativePlatform();
 
+// 로그인(소셜/이메일) 상태면 Supabase 액세스 토큰을 Bearer 로 첨부 →
+// 사이트 서버(getRequestUser)가 앱 사용자를 식별해 예약 소유·후기 작성을 허용.
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const headers = { "Content-Type": "application/json", ...(await authHeaders()) };
   if (native) {
-    const res = await CapacitorHttp.request({
-      method: "POST",
-      url,
-      headers: { "Content-Type": "application/json" },
-      data: body,
-    });
+    const res = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
     const data = typeof res.data === "string" ? safeParse(res.data) : res.data;
     if (res.status < 200 || res.status >= 300) {
       throw new Error((data as { error?: string })?.error || "요청에 실패했어요.");
     }
     return data as T;
   }
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((data as { error?: string }).error || "요청에 실패했어요.");
   return data as T;
@@ -112,6 +117,7 @@ export type ApplicationInput = {
   experience: string;
   teamSize: string;
   intro: string;
+  photos?: string[]; // 업체 대표 사진 (base64 data URL)
 };
 export async function createApplication(input: ApplicationInput) {
   const { application } = await post<{ application: { id: string } }>(
@@ -119,6 +125,18 @@ export async function createApplication(input: ApplicationInput) {
     input
   );
   return application;
+}
+
+// ── 후기 작성 (POST /api/reviews, 로그인 필요) ──
+export type ReviewInput = {
+  reservationId: string;
+  rating: number;
+  body: string;
+  photos: string[]; // base64 data URL
+};
+export async function createReview(input: ReviewInput) {
+  const { review } = await post<{ review: { id: string } }>("/api/reviews", input);
+  return review;
 }
 
 // ── 파트너 공개 후기 (GET /api/partners/[id]/reviews) ──
@@ -134,6 +152,7 @@ export type ApprovedPartner = {
   services: string[];
   regions: string;
   intro: string;
+  photos: string[];
 };
 export async function fetchApprovedPartners(): Promise<ApprovedPartner[]> {
   const data = await getJson("/api/partners");

@@ -333,6 +333,7 @@ export type Review = {
   date: string;
   service: string;
   text: string;
+  photos?: string[]; // 첨부 사진 공개 URL
 };
 
 export const REVIEWS: Record<string, Review[]> = {

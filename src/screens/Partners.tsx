@@ -69,6 +69,18 @@ function ApprovedCard({ p }: { p: ApprovedPartner }) {
         </div>
       </div>
       {p.intro && <p className="small" style={{ marginTop: 10, lineHeight: 1.6 }}>{p.intro}</p>}
+      {p.photos.length > 0 && (
+        <div style={{ display: "flex", gap: 8, marginTop: 12, overflowX: "auto" }}>
+          {p.photos.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt=""
+              style={{ width: 108, height: 108, objectFit: "cover", borderRadius: 12, flexShrink: 0 }}
+            />
+          ))}
+        </div>
+      )}
       <div className="flex wrap gap-6" style={{ marginTop: 10 }}>
         {p.services.map((s) => (
           <span key={s} className="chip">{s}</span>
@@ -160,6 +172,13 @@ function Detail({ p, onBack, onConsult }: { p: Partner; onBack: () => void; onCo
                 <span className="tiny muted">{r.service}</span>
               </div>
               <p className="small" style={{ marginTop: 8, lineHeight: 1.6 }}>{r.text}</p>
+              {r.photos && r.photos.length > 0 && (
+                <div style={{ display: "flex", gap: 6, marginTop: 8, overflowX: "auto" }}>
+                  {r.photos.map((src, j) => (
+                    <img key={j} src={src} alt="" style={{ width: 92, height: 92, objectFit: "cover", borderRadius: 10, flexShrink: 0 }} />
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

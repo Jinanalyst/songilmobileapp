@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { STATUS_META, serviceById, partnerById, formatKRW, DEPOSIT } from "../data";
-import { useStore } from "../store";
+import { useStore, type SavedReservation } from "../store";
 import { AppBar } from "../components/ui";
+import ReviewWrite from "./ReviewWrite";
 
 export default function MyReservations({ onBack }: { onBack: () => void }) {
   const { submissions } = useStore();
   const rows = submissions.reservations;
+  const [reviewing, setReviewing] = useState<SavedReservation | null>(null);
+
+  if (reviewing) {
+    return <ReviewWrite reservation={reviewing} onBack={() => setReviewing(null)} />;
+  }
 
   return (
     <div className="screen">
@@ -48,6 +55,9 @@ export default function MyReservations({ onBack }: { onBack: () => void }) {
                   <div className="flex between mt-8"><span className="muted small">평수</span><b className="small">{r.pyeong}평</b></div>
                   <div className="flex between mt-8"><span className="muted small">예약금</span><b className="small price">{formatKRW(DEPOSIT)}</b></div>
                   <p className="notice" style={{ marginTop: 12 }}>{meta.desc}</p>
+                  <button className="btn btn-outline btn-block" style={{ marginTop: 12 }} onClick={() => setReviewing(r)}>
+                    ⭐ 후기 작성하기
+                  </button>
                 </div>
               );
             })}

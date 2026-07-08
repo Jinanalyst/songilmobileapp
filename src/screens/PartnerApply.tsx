@@ -3,6 +3,7 @@ import { SERVICES, BANKS } from "../data";
 import { createApplication } from "../api";
 import { useStore } from "../store";
 import { AppBar, Field } from "../components/ui";
+import PhotoPicker from "../components/PhotoPicker";
 
 const SERVICE_NAMES = SERVICES.map((s) => s.name);
 
@@ -23,6 +24,7 @@ export default function PartnerApply({ onBack }: { onBack: () => void }) {
     intro: "",
   });
   const [services, setServices] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export default function PartnerApply({ onBack }: { onBack: () => void }) {
     setError(null);
     setBusy(true);
     try {
-      const app = await createApplication({ ...f, services });
+      const app = await createApplication({ ...f, services, photos });
       saveApplication({
         id: app.id,
         createdAt: new Date().toISOString().slice(0, 10),
@@ -159,6 +161,17 @@ export default function PartnerApply({ onBack }: { onBack: () => void }) {
           <Field label="업체 소개">
             <textarea className="input" rows={3} value={f.intro} onChange={(e) => set({ intro: e.target.value })} placeholder="어떤 청소를 어떻게 하는 팀인지 소개해 주세요." />
           </Field>
+
+          {/* 업체 대표 사진 — 신뢰용 */}
+          <div className="field">
+            <span className="label" style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: 7 }}>
+              업체 사진
+            </span>
+            <p className="tiny muted" style={{ margin: "0 0 8px" }}>
+              작업 사진·시공 전후·팀 사진을 올리면 고객에게 신뢰를 줄 수 있어요. 승인되면 파트너 목록에 함께 노출됩니다.
+            </p>
+            <PhotoPicker photos={photos} onChange={setPhotos} max={6} label="업체 사진" />
+          </div>
 
           {error && <p className="error-box" style={{ marginBottom: 12 }}>{error}</p>}
 
