@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   SERVICES,
   PARTNERS,
@@ -16,24 +16,21 @@ import {
   propertyLabelOf,
 } from "../data";
 import { DIFFICULTY, OPTIONS, computeEstimate } from "../pricing";
-import { createReservation } from "../api";
+import { createReservation, fetchAvailability, type BookedSlot } from "../api";
 import { useStore } from "../store";
 import { AppBar, Field } from "../components/ui";
+import Calendar, { type DateStatus } from "../components/Calendar";
 
 const STEPS = ["서비스", "공간 정보", "날짜·업체", "정보 입력", "예약금 결제"];
-const WEEK = ["일", "월", "화", "수", "목", "금", "토"];
 
-function upcomingDays(count: number) {
-  const days: Date[] = [];
-  const base = new Date();
-  base.setHours(0, 0, 0, 0);
-  for (let i = 0; i < count; i++) {
-    const d = new Date(base);
-    d.setDate(base.getDate() + i);
-    days.push(d);
-  }
-  return days;
+// 예약 가능한 최소 날짜 = 오늘 + 3일 (당일·긴급 예약 제외)
+function minBookingDate(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3);
+  return d;
 }
+
 function ymd(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -81,7 +78,60 @@ export default function Book({ onDone }: { onDone: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
 
-  const days = useMemo(() => upcomingDays(21), []);
+  const minDate = useMemo(() => minBookingDate(), []);
+
+  // 예약 현황(이미 예약된 슬롯) — 캘린더/시간대 마감 표시용
+  const [booked, setBooked] = useState<BookedSlot[]>([]);
+  useEffect(() => {
+    fetchAvailability().then(setBooked).catch(() => setBooked([]));
+  }, []);
+
+  // 업체+날짜별 예약된 시간대 Set
+  const bookedByPartnerDate = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    booked.forEach((s) => {
+      const k = `${s.partnerId}|${s.date}`;
+      if (!m.has(k)) m.set(k, new Set());
+      m.get(k)!.add(s.timeSlot);
+    });
+    return m;
+  }, [booked]);
+  // 날짜별 전체 예약 슬롯(업체·시간) Set (업체 미선택 시 집계용)
+  const bookedByDateAll = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    booked.forEach((s) => {
+      if (!m.has(s.date)) m.set(s.date, new Set());
+      m.get(s.date)!.add(`${s.partnerId}|${s.timeSlot}`);
+    });
+    return m;
+  }, [booked]);
+
+  function dateStatus(dateStr: string): DateStatus {
+    const slots = TIME_SLOTS.length;
+    if (partnerId) {
+      const b = bookedByPartnerDate.get(`${partnerId}|${dateStr}`)?.size ?? 0;
+      if (b >= slots) return "full";
+      return b > 0 ? "some" : "open";
+    }
+    const cap = PARTNERS.length * slots;
+    const b = bookedByDateAll.get(dateStr)?.size ?? 0;
+    if (b >= cap) return "full";
+    return b > 0 ? "some" : "open";
+  }
+
+  function isSlotBooked(t: string): boolean {
+    if (!partnerId || !date) return false;
+    return bookedByPartnerDate.get(`${partnerId}|${date}`)?.has(t) ?? false;
+  }
+
+  // 업체/날짜 변경 시 선택한 시간이 마감이면 해제
+  useEffect(() => {
+    if (time && partnerId && date && bookedByPartnerDate.get(`${partnerId}|${date}`)?.has(time)) {
+      setTime("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partnerId, date, bookedByPartnerDate]);
+
   const svc = serviceById(serviceId);
   const cat = categoryOf(serviceId);
   const py = parseInt(pyeong || "0", 10) || 0;
@@ -381,24 +431,27 @@ export default function Book({ onDone }: { onDone: () => void }) {
           <div style={{ marginTop: 14 }}>
             <h2 className="title-lg">언제, 어느 업체로?</h2>
             <p className="small muted" style={{ marginTop: 4 }}>방문 날짜와 시간, 담당 업체를 골라주세요.</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginTop: 14 }}>
-              {days.map((d) => {
-                const key = ymd(d);
-                const sel = date === key;
+            <Calendar value={date} onChange={setDate} minDate={minDate} dateStatus={dateStatus} />
+            <p className="small" style={{ fontWeight: 700, marginTop: 18 }}>방문 시간대</p>
+            {!partnerId && (
+              <p className="tiny muted" style={{ marginTop: 4 }}>아래에서 업체를 선택하면 예약 가능한 시간이 표시돼요.</p>
+            )}
+            <div className="opt-grid" style={{ marginTop: 8 }}>
+              {TIME_SLOTS.map((t) => {
+                const bookedSlot = isSlotBooked(t);
                 return (
-                  <button key={key} onClick={() => setDate(key)} className="card"
-                    style={{ padding: "8px 0", textAlign: "center", border: sel ? "1px solid var(--brand)" : undefined, background: sel ? "var(--brand)" : "#fff", color: sel ? "#fff" : "var(--ink)" }}>
-                    <div className="tiny" style={{ opacity: 0.7 }}>{WEEK[d.getDay()]}</div>
-                    <div style={{ fontWeight: 800 }}>{d.getDate()}</div>
+                  <button
+                    key={t}
+                    className={`opt${time === t ? " sel" : ""}`}
+                    disabled={bookedSlot}
+                    onClick={() => !bookedSlot && setTime(t)}
+                    style={bookedSlot ? { textDecoration: "line-through", opacity: 0.5 } : undefined}
+                  >
+                    {t}
+                    {bookedSlot && <span className="tiny" style={{ marginLeft: 4 }}>마감</span>}
                   </button>
                 );
               })}
-            </div>
-            <p className="small" style={{ fontWeight: 700, marginTop: 18 }}>방문 시간대</p>
-            <div className="opt-grid" style={{ marginTop: 8 }}>
-              {TIME_SLOTS.map((t) => (
-                <button key={t} className={`opt${time === t ? " sel" : ""}`} onClick={() => setTime(t)}>{t}</button>
-              ))}
             </div>
             <p className="small" style={{ fontWeight: 700, marginTop: 18 }}>담당 업체 선택</p>
             <div className="stack-sm" style={{ marginTop: 8 }}>

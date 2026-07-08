@@ -145,6 +145,13 @@ export async function fetchReviews(partnerId: string): Promise<Review[]> {
   return (data?.reviews ?? []) as Review[];
 }
 
+// ── 예약 가능 현황 (GET /api/availability) — 예약된 슬롯 목록 ──
+export type BookedSlot = { date: string; timeSlot: string; partnerId: string };
+export async function fetchAvailability(): Promise<BookedSlot[]> {
+  const data = await getJson("/api/availability");
+  return (data?.slots ?? []) as BookedSlot[];
+}
+
 // ── 승인된 신규 파트너 (GET /api/partners) — 없으면 빈 배열 ──
 export type ApprovedPartner = {
   id: string;
