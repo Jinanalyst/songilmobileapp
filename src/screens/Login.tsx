@@ -59,7 +59,7 @@ export default function Login() {
     <div className="app-shell">
       <div className="pad" style={{ paddingTop: "12vh" }}>
         <div className="center-text">
-          <img src="logo-mark.svg" alt="손길" style={{ height: 64, width: 64, margin: "0 auto", display: "block" }} />
+          <img src="logo-mark.png" alt="손길" style={{ height: 64, width: 64, margin: "0 auto", display: "block" }} />
           <h1 className="title-xl" style={{ marginTop: 14 }}>손길 시작하기</h1>
           <p className="sub small">
             카카오 또는 구글 계정으로 3초 만에

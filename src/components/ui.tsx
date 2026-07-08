@@ -16,7 +16,7 @@ export function AppBar({
           ‹
         </button>
       )}
-      {showLogo && <img className="logo" src="logo-mark.svg" alt="" />}
+      {showLogo && <img className="logo" src="logo-mark.png" alt="" />}
       <span className="title">{title ?? "손길"}</span>
     </div>
   );

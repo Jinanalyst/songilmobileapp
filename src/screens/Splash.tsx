@@ -19,7 +19,7 @@ export default function Splash({ onDone }: { onDone: () => void }) {
         }}
       >
         <img
-          src="logo-mark.svg"
+          src="logo-mark.png"
           alt="손길"
           className="rise"
           style={{ height: 108, width: 108 }}

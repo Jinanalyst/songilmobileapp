@@ -40,7 +40,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
   return (
     <div className="app-shell">
       <div className="pad flex between center">
-        <img src="logo-mark.svg" alt="" style={{ height: 28, width: 28 }} />
+        <img src="logo-mark.png" alt="" style={{ height: 28, width: 28 }} />
         <button
           className="tiny muted"
           style={{ border: "none", background: "transparent" }}
