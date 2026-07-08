@@ -10,12 +10,12 @@ import {
   BATH_OPTIONS,
   SPACE_TYPES,
   PARTIAL_AREAS,
-  estimatePrice,
   formatKRW,
   serviceById,
   categoryOf,
   propertyLabelOf,
 } from "../data";
+import { DIFFICULTY, OPTIONS, computeEstimate } from "../pricing";
 import { createReservation } from "../api";
 import { useStore } from "../store";
 import { AppBar, Field } from "../components/ui";
@@ -75,6 +75,8 @@ export default function Book({ onDone }: { onDone: () => void }) {
   const [address, setAddress] = useState(session.address || "");
   const [addressDetail, setAddressDetail] = useState(session.addressDetail || "");
   const [notes, setNotes] = useState("");
+  const [difficulty, setDifficulty] = useState("normal");
+  const [options, setOptions] = useState<string[]>([]);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -83,7 +85,18 @@ export default function Book({ onDone }: { onDone: () => void }) {
   const svc = serviceById(serviceId);
   const cat = categoryOf(serviceId);
   const py = parseInt(pyeong || "0", 10) || 0;
-  const estimate = serviceId ? estimatePrice(serviceId, py || 20) : 0;
+  // 견적 계산 (평수 × 평당단가 vs 구간 최소금액, 난이도·주거유형·일정 계수 + 옵션비)
+  const est = computeEstimate({
+    pyeong: py,
+    difficulty,
+    propertyType: prop.propertyType,
+    date,
+    options,
+  });
+
+  function toggleOption(id: string) {
+    setOptions((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
+  }
 
   function setP(patch: Partial<Prop>) {
     setProp((p) => ({ ...p, ...patch }));
@@ -134,6 +147,20 @@ export default function Book({ onDone }: { onDone: () => void }) {
     };
   }
 
+  // 견적 세부(난이도·옵션·예상금액)를 요청사항에 함께 기록해 업체가 참고하도록 한다.
+  function buildNotes() {
+    const parts: string[] = [];
+    if (notes.trim()) parts.push(notes.trim());
+    const diff = DIFFICULTY.find((d) => d.id === difficulty);
+    if (diff && diff.id !== "normal") parts.push(`오염 정도: ${diff.label}`);
+    if (options.length) {
+      const labels = options.map((id) => OPTIONS.find((o) => o.id === id)?.label).filter(Boolean);
+      parts.push(`추가 옵션: ${labels.join(", ")}`);
+    }
+    parts.push(`앱 예상 견적: ${formatKRW(est.final)}`);
+    return parts.join(" / ");
+  }
+
   async function pay() {
     setError(null);
     setPaying(true);
@@ -148,7 +175,7 @@ export default function Book({ onDone }: { onDone: () => void }) {
         phone,
         address,
         addressDetail,
-        notes,
+        notes: buildNotes(),
         property: buildProperty(),
       });
       saveReservation({
@@ -240,7 +267,12 @@ export default function Book({ onDone }: { onDone: () => void }) {
             {svc && py > 0 && (
               <div className="notice-info">
                 <span>ⓘ</span>
-                <span><b>{svc.name}</b> {py}평 예상 견적 <b className="price">{formatKRW(estimate)}</b>. 최종 금액은 방문·상담 후 확정돼요.</span>
+                <span>
+                  <b>{py}평 기본 예상 견적</b>{" "}
+                  <b className="price">{formatKRW(est.base)}</b>
+                  <br />
+                  오염 정도·주거 형태·방문 일정·추가 옵션에 따라 최종 견적이 달라져요.
+                </span>
               </div>
             )}
           </div>
@@ -304,6 +336,43 @@ export default function Book({ onDone }: { onDone: () => void }) {
             <Field label="층수·엘리베이터·주차 (선택)">
               <input className="input" value={prop.floorInfo} onChange={(e) => setP({ floorInfo: e.target.value })} placeholder="예) 3층, 엘리베이터 있음, 주차 가능" />
             </Field>
+
+            {/* 오염 정도 (난이도 계수) */}
+            <p className="small" style={{ fontWeight: 700, marginTop: 6 }}>오염 정도</p>
+            <p className="tiny muted" style={{ margin: "2px 0 8px" }}>오염이 심할수록 작업 시간·인력이 늘어 견적에 반영돼요.</p>
+            <div className="opt-grid">
+              {DIFFICULTY.map((d) => (
+                <button key={d.id} className={`opt${difficulty === d.id ? " sel" : ""}`} onClick={() => setDifficulty(d.id)}>
+                  {d.label}
+                  <span className="tiny muted" style={{ marginLeft: 4 }}>×{d.factor}</span>
+                </button>
+              ))}
+            </div>
+            <p className="tiny muted" style={{ marginTop: 6 }}>
+              {DIFFICULTY.find((d) => d.id === difficulty)?.desc}
+            </p>
+
+            {/* 추가 옵션 (옵션비) */}
+            <p className="small" style={{ fontWeight: 700, marginTop: 18 }}>추가 옵션 (선택)</p>
+            <div className="stack-sm" style={{ marginTop: 8 }}>
+              {OPTIONS.map((o) => {
+                const sel = options.includes(o.id);
+                return (
+                  <button
+                    key={o.id}
+                    className="card card-pad flex between center"
+                    style={{ width: "100%", textAlign: "left", border: sel ? "1px solid var(--brand)" : undefined, background: sel ? "var(--brand-50)" : "#fff" }}
+                    onClick={() => toggleOption(o.id)}
+                  >
+                    <span className="flex center gap-8">
+                      <span style={{ color: sel ? "var(--brand)" : "var(--line)", fontWeight: 900 }}>{sel ? "☑" : "☐"}</span>
+                      <span className="small"><b>{o.label}</b></span>
+                    </span>
+                    <span className="small price">+{formatKRW(o.price)}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -382,12 +451,39 @@ export default function Book({ onDone }: { onDone: () => void }) {
               <div className="flex between"><span className="muted small">서비스</span><b>{svc?.emoji} {svc?.name}</b></div>
               <div className="flex between mt-8"><span className="muted small">방문일</span><b>{date} {time}</b></div>
               <div className="flex between mt-8"><span className="muted small">담당 업체</span><b>{PARTNERS.find((p) => p.id === partnerId)?.name}</b></div>
-              <div className="flex between mt-8"><span className="muted small">예상 견적</span><b>{formatKRW(estimate)}</b></div>
+            </div>
+
+            {/* 견적 상세 */}
+            <div className="card card-pad" style={{ marginTop: 12 }}>
+              <p className="small" style={{ fontWeight: 700, marginBottom: 8 }}>예상 견적 상세</p>
+              <div className="flex between"><span className="muted small">기본 견적 ({py}평)</span><b className="small">{formatKRW(est.base)}</b></div>
+              {est.difficulty !== 1 && (
+                <div className="flex between mt-8"><span className="muted small">난이도</span><b className="small">×{est.difficulty}</b></div>
+              )}
+              {est.housing !== 1 && (
+                <div className="flex between mt-8"><span className="muted small">주거유형 ({prop.propertyType})</span><b className="small">×{est.housing}</b></div>
+              )}
+              {est.schedule !== 1 && (
+                <div className="flex between mt-8"><span className="muted small">{est.scheduleLabel} 방문</span><b className="small">×{est.schedule}</b></div>
+              )}
+              {est.optionsFee > 0 && (
+                <div className="flex between mt-8"><span className="muted small">추가 옵션 {options.length}개</span><b className="small">+{formatKRW(est.optionsFee)}</b></div>
+              )}
               <hr className="hr" />
+              <div className="flex between center">
+                <span style={{ fontWeight: 700 }}>최종 예상 견적</span>
+                <span className="price" style={{ fontSize: "1.25rem" }}>{formatKRW(est.final)}</span>
+              </div>
+              <p className="tiny muted" style={{ marginTop: 8 }}>최종 금액은 현장 확인 후 확정될 수 있어요.</p>
+            </div>
+
+            {/* 결제 */}
+            <div className="card card-pad" style={{ marginTop: 12, background: "var(--brand-50)", border: "1px solid var(--brand-100)" }}>
               <div className="flex between center">
                 <span style={{ fontWeight: 700 }}>지금 결제 (예약금)</span>
                 <span className="price" style={{ fontSize: "1.3rem" }}>{formatKRW(DEPOSIT)}</span>
               </div>
+              <p className="tiny muted" style={{ marginTop: 6 }}>잔금 {formatKRW(Math.max(0, est.final - DEPOSIT))}은 청소 완료 후 현장에서 결제해요.</p>
             </div>
             <div className="notice" style={{ marginTop: 14 }}>{PAYMENT_NOTICE}</div>
             <div className="notice-info" style={{ marginTop: 12 }}>
