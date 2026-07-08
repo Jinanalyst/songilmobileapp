@@ -28,3 +28,6 @@ android/capacitor-cordova-android-plugins/
 *.log
 .env
 .env.local
+
+# typescript build cache
+tsconfig.tsbuildinfo
