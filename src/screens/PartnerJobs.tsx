@@ -8,6 +8,7 @@ import {
   type PartnerJobsApi,
 } from "../partner";
 import { AppBar, Field, Tracker } from "../components/ui";
+import MessageThread from "../components/MessageThread";
 
 const WEEK = ["일", "월", "화", "수", "목", "금", "토"];
 const JOB_FLOW: JobStatus[] = ["new", "quoted", "confirmed", "in_progress", "completed"];
@@ -174,6 +175,15 @@ function JobDetail({
             거절 취소 (다시 신규로)
           </button>
         )}
+
+        {/* 손길 운영팀과 소통 (배정된 실제 예약만 열람 가능) */}
+        <MessageThread
+          type="reservation"
+          id={job.id}
+          audience="partner"
+          me="partner"
+          title="💬 손길 운영팀과 소통"
+        />
       </div>
     </div>
   );

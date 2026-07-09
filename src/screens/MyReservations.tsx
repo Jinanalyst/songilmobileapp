@@ -2,6 +2,7 @@ import { useState } from "react";
 import { STATUS_META, serviceById, partnerById, formatKRW, DEPOSIT } from "../data";
 import { useStore, type SavedReservation } from "../store";
 import { AppBar } from "../components/ui";
+import MessageThread from "../components/MessageThread";
 import ReviewWrite from "./ReviewWrite";
 
 export default function MyReservations({ onBack }: { onBack: () => void }) {
@@ -58,6 +59,13 @@ export default function MyReservations({ onBack }: { onBack: () => void }) {
                   <button className="btn btn-outline btn-block" style={{ marginTop: 12 }} onClick={() => setReviewing(r)}>
                     ⭐ 후기 작성하기
                   </button>
+                  <MessageThread
+                    type="reservation"
+                    id={r.id}
+                    audience="customer"
+                    me="customer"
+                    title="💬 손길 운영팀과 소통"
+                  />
                 </div>
               );
             })}

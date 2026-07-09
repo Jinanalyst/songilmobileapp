@@ -3,7 +3,11 @@
 // 접수된 예약(store.submissions.reservations)을 합쳐 "들어온 예약"으로 보여준다.
 import { useEffect, useState } from "react";
 import type { SavedReservation } from "./store";
-import { fetchPartnerReservations, type PartnerReservation } from "./api";
+import {
+  fetchPartnerReservations,
+  sendPartnerQuote,
+  type PartnerReservation,
+} from "./api";
 
 export type JobStatus =
   | "new" // 신규 요청 (아직 견적 전)
@@ -245,7 +249,7 @@ export function usePartnerJobs(deviceReservations: SavedReservation[]): PartnerJ
     }
   }, [jobs]);
 
-  const sendQuote = (id: string, amount: number, memo: string) =>
+  const sendQuote = (id: string, amount: number, memo: string) => {
     setJobs((prev) =>
       prev.map((j) =>
         j.id === id
@@ -257,6 +261,10 @@ export function usePartnerJobs(deviceReservations: SavedReservation[]): PartnerJ
           : j,
       ),
     );
+    // 서버(handway.online)에 견적 동기화 — 관리자 화면에 표시.
+    // 배정된 실제 예약만 성공하고, 데모/미배정 건은 조용히 무시된다.
+    sendPartnerQuote(id, amount, memo).catch(() => {});
+  };
 
   const setStatus = (id: string, status: JobStatus) =>
     setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status } : j)));

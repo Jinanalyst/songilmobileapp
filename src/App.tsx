@@ -14,6 +14,10 @@ import Account from "./screens/Account";
 import PartnerJobs from "./screens/PartnerJobs";
 import PartnerQuotes from "./screens/PartnerQuotes";
 import PartnerAccount from "./screens/PartnerAccount";
+import AdminReservations from "./screens/AdminReservations";
+import AdminConsultations from "./screens/AdminConsultations";
+import AdminApplications from "./screens/AdminApplications";
+import { ADMIN_EMAIL } from "./config";
 
 /* ── 고객·게스트 모드 ── */
 type Tab = "account" | "partners" | "book" | "consult";
@@ -89,8 +93,41 @@ function PartnerShell() {
   );
 }
 
+/* ── 운영자(관리자) 모드 ── */
+type ATab = "reservations" | "consultations" | "applications";
+
+const ATABS: { id: ATab; label: string; icon: string }[] = [
+  { id: "reservations", label: "예약", icon: "📅" },
+  { id: "consultations", label: "상담", icon: "💬" },
+  { id: "applications", label: "심사", icon: "🏢" },
+];
+
+function AdminShell() {
+  const [tab, setTab] = useState<ATab>("reservations");
+  return (
+    <div className="app-shell">
+      {tab === "reservations" && <AdminReservations />}
+      {tab === "consultations" && <AdminConsultations />}
+      {tab === "applications" && <AdminApplications />}
+
+      <nav className="tabbar">
+        {ATABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? "active" : ""} onClick={() => setTab(t.id)}>
+            <span className="ic">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
 function Main() {
   const { session } = useStore();
+  // 운영자 계정으로 로그인하면 관리자 콘솔 (사이트와 동일 데이터).
+  if (session.email && session.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+    return <AdminShell />;
+  }
   return session.role === "business" ? <PartnerShell /> : <CustomerShell />;
 }
 
