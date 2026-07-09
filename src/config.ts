@@ -15,4 +15,5 @@ export const KAKAO_CHANNEL = "http://pf.kakao.com/_BTrPX/chat";
 export const SUPPORT_TEL = "050-6990-8359";
 
 // OAuth 콜백용 딥링크 (Supabase 대시보드 Redirect URLs 에 추가 필요)
-export const APP_REDIRECT = "online.handway.songil://auth/callback";
+// 스킴은 앱 패키지(online.handway.app)와 통일. AndroidManifest / strings.xml 과 일치해야 함.
+export const APP_REDIRECT = "online.handway.app://auth/callback";

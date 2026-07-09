@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "online.handway.songil",
+  appId: "online.handway.app",
   appName: "손길",
   webDir: "dist",
   backgroundColor: "#fbfaf7",

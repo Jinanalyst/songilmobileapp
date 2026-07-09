@@ -47,7 +47,7 @@ export async function signInWithOAuth(provider: "google" | "kakao") {
   }
 }
 
-// 앱이 딥링크(online.handway.songil://auth/callback?...)로 열릴 때 세션 교환.
+// 앱이 딥링크(online.handway.app://auth/callback?...)로 열릴 때 세션 교환.
 export async function initDeepLinkAuth() {
   if (!Capacitor.isNativePlatform()) return;
   const { App } = await import("@capacitor/app");

@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">손길</string>
     <string name="title_activity_main">손길</string>
-    <string name="package_name">online.handway.songil</string>
-    <string name="custom_url_scheme">online.handway.songil</string>
+    <string name="package_name">online.handway.app</string>
+    <string name="custom_url_scheme">online.handway.app</string>
 </resources>

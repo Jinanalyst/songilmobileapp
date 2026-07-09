@@ -19,12 +19,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- 구글/카카오 OAuth 딥링크 콜백 (online.handway.songil://auth/callback) -->
+            <!-- 구글/카카오 OAuth 딥링크 콜백 (online.handway.app://auth/callback) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="online.handway.songil" />
+                <data android:scheme="online.handway.app" />
             </intent-filter>
         </activity>
 
