@@ -39,6 +39,7 @@ type Session = {
   seenIntro: boolean;
   loggedIn: boolean;
   onboarded: boolean;
+  pendingApply: boolean; // 온보딩에서 '업체' 선택 → 사업자 등록 화면으로 유도
   role: Role;
   name: string;
   phone: string;
@@ -68,6 +69,8 @@ type Store = {
   setAuthUser: (name: string, email: string, provider: "kakao" | "google") => void;
   updateProfile: (patch: ProfilePatch) => void;
   chooseRole: (role: Role) => void;
+  requestPartnerApply: () => void; // 업체 등록 유도 (고객으로 온보딩 + 등록 화면 플래그)
+  clearPendingApply: () => void;
   logout: () => Promise<void>;
   saveReservation: (r: SavedReservation) => void;
   saveConsultation: (c: SavedConsultation) => void;
@@ -80,6 +83,7 @@ const DEFAULT_SESSION: Session = {
   seenIntro: false,
   loggedIn: false,
   onboarded: false,
+  pendingApply: false,
   role: "guest",
   name: "",
   phone: "",
@@ -217,6 +221,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...s,
         session: { ...s.session, role, onboarded: true },
       })),
+    requestPartnerApply: () =>
+      setState((s) => ({
+        ...s,
+        session: { ...s.session, role: "customer", onboarded: true, pendingApply: true },
+      })),
+    clearPendingApply: () =>
+      setState((s) => ({ ...s, session: { ...s.session, pendingApply: false } })),
     updateProfile: (patch) =>
       setState((s) => ({ ...s, session: { ...s.session, ...patch } })),
     logout: async () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { COMPANY, serviceById, partnerById } from "../data";
 import { useStore, type Role } from "../store";
 import { AppBar } from "../components/ui";
@@ -35,9 +35,20 @@ function Avatar({ photo, name, size = 56 }: { photo: string; name: string; size?
   );
 }
 
-export default function Account({ onLogout }: { onLogout: () => void }) {
-  const { session, submissions, chooseRole, logout } = useStore();
-  const [view, setView] = useState<View>("home");
+export default function Account({
+  onLogout,
+  startApply = false,
+}: {
+  onLogout: () => void;
+  startApply?: boolean;
+}) {
+  const { session, submissions, chooseRole, logout, clearPendingApply } = useStore();
+  const [view, setView] = useState<View>(startApply ? "apply" : "home");
+
+  // 온보딩에서 '업체' 선택으로 넘어온 경우 등록 화면을 한 번 열고 플래그를 해제
+  useEffect(() => {
+    if (startApply) clearPendingApply();
+  }, [startApply, clearPendingApply]);
 
   if (view === "edit") return <ProfileEdit onBack={() => setView("home")} />;
   if (view === "reservations") return <MyReservations onBack={() => setView("home")} />;
@@ -46,6 +57,17 @@ export default function Account({ onLogout }: { onLogout: () => void }) {
   async function handleLogout() {
     await logout();
     onLogout();
+  }
+
+  // 사업자 등록(파트너 심사 신청)을 한 적이 있어야 업체로 전환 가능.
+  const registered = submissions.applications.length > 0;
+  function pickRole(r: Role) {
+    if (r === "business" && !registered) {
+      // 아직 미등록 → 사업자 등록 화면으로 안내
+      setView("apply");
+      return;
+    }
+    chooseRole(r);
   }
 
   const recent = submissions.reservations.slice(0, 2);
@@ -113,11 +135,17 @@ export default function Account({ onLogout }: { onLogout: () => void }) {
         <p className="small muted" style={{ marginTop: 2 }}>언제든 다른 유형으로 바꿀 수 있어요.</p>
         <div className="opt-grid" style={{ marginTop: 10 }}>
           {(["customer", "business", "guest"] as Role[]).map((r) => (
-            <button key={r} className={`opt${session.role === r ? " sel" : ""}`} onClick={() => chooseRole(r)}>
+            <button key={r} className={`opt${session.role === r ? " sel" : ""}`} onClick={() => pickRole(r)}>
               {ROLE_LABEL[r]}
+              {r === "business" && !registered && " 🔒"}
             </button>
           ))}
         </div>
+        {!registered && (
+          <p className="tiny muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
+            🔒 업체로 전환하려면 먼저 <b>사업자 등록(파트너 심사 신청)</b>이 필요해요. 업체를 선택하면 등록 화면으로 이동해요.
+          </p>
+        )}
 
         {/* 파트너 등록(심사) */}
         <button

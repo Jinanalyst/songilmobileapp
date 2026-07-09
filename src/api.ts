@@ -53,6 +53,24 @@ async function getJson(path: string): Promise<any | null> {
   }
 }
 
+// 로그인(Bearer) 토큰을 첨부한 인증 GET — 파트너 본인 예약 등 계정 스코프 조회용.
+async function getJsonAuth(path: string): Promise<any | null> {
+  const url = `${API_BASE}${path}`;
+  const headers = await authHeaders();
+  try {
+    if (native) {
+      const res = await CapacitorHttp.request({ method: "GET", url, headers });
+      if (res.status < 200 || res.status >= 300) return null;
+      return typeof res.data === "string" ? safeParse(res.data) : res.data;
+    }
+    const res = await fetch(url, { headers });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 function safeParse(s: string): unknown {
   try {
     return JSON.parse(s);
@@ -164,4 +182,28 @@ export type ApprovedPartner = {
 export async function fetchApprovedPartners(): Promise<ApprovedPartner[]> {
   const data = await getJson("/api/partners");
   return (data?.partners ?? []) as ApprovedPartner[];
+}
+
+// ── 파트너 본인에게 배정된 예약 (GET /api/partner/reservations, 로그인 필요) ──
+// 승인된 업체 계정이면 자기 업체 예약을, 아니면 빈 배열을 돌려준다.
+export type PartnerReservation = {
+  id: string;
+  createdAt: string;
+  partnerId: string;
+  serviceId: string;
+  pyeong: number;
+  date: string;
+  timeSlot: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  addressDetail: string;
+  notes: string;
+  property: Record<string, unknown>;
+  price: number;
+  status: string;
+};
+export async function fetchPartnerReservations(): Promise<PartnerReservation[]> {
+  const data = await getJsonAuth("/api/partner/reservations");
+  return (data?.reservations ?? []) as PartnerReservation[];
 }

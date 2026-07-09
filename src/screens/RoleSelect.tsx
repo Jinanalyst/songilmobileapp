@@ -51,10 +51,15 @@ function RoleCard({
 }
 
 export default function RoleSelect() {
-  const { session, chooseRole } = useStore();
+  const { session, chooseRole, requestPartnerApply } = useStore();
   const greeting = session.name || "회원";
 
   function pick(role: Role) {
+    // 업체는 사업자 등록(심사) 후에만 이용 가능 → 등록 화면으로 유도
+    if (role === "business") {
+      requestPartnerApply();
+      return;
+    }
     chooseRole(role);
   }
 
