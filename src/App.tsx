@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StoreProvider, useStore } from "./store";
 import { initDeepLinkAuth } from "./oauth";
+import { initRefCapture } from "./ref";
 import { usePartnerJobs } from "./partner";
 import { usePartnerProfile } from "./partnerProfile";
 import Splash from "./screens/Splash";
@@ -146,6 +147,7 @@ function Root() {
 export default function App() {
   useEffect(() => {
     initDeepLinkAuth();
+    initRefCapture();
   }, []);
   return (
     <StoreProvider>

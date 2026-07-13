@@ -4,6 +4,7 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { API_BASE } from "./config";
 import { supabase } from "./supabase";
+import { getStoredRef } from "./ref";
 import type { Review } from "./data";
 
 const native = Capacitor.isNativePlatform();
@@ -111,11 +112,12 @@ export type ReservationInput = {
   property: Record<string, unknown>;
   difficulty?: string; // 견적·수수료 계산용 (오염 정도)
   options?: string[]; // 견적·수수료 계산용 (추가 옵션)
+  ref?: string; // 추천 코드 (없으면 저장된 코드 자동 첨부)
 };
 export async function createReservation(input: ReservationInput) {
   const { reservation } = await post<{ reservation: { id: string } }>(
     "/api/reservations",
-    input
+    { ...input, ref: input.ref ?? getStoredRef() }
   );
   return reservation;
 }
@@ -155,11 +157,12 @@ export type ApplicationInput = {
   teamSize: string;
   intro: string;
   photos?: string[]; // 업체 대표 사진 (base64 data URL)
+  ref?: string; // 추천 코드 (업체 소개 추천)
 };
 export async function createApplication(input: ApplicationInput) {
   const { application } = await post<{ application: { id: string } }>(
     "/api/applications",
-    input
+    { ...input, ref: input.ref ?? getStoredRef() }
   );
   return application;
 }

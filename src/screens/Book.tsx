@@ -16,6 +16,7 @@ import {
 } from "../data";
 import { DIFFICULTY, OPTIONS, computeEstimate, platformFee } from "../pricing";
 import { createReservation, fetchAvailability, type BookedSlot } from "../api";
+import { getStoredRef, setRef } from "../ref";
 import { useStore } from "../store";
 import { AppBar, Field } from "../components/ui";
 import Calendar, { type DateStatus } from "../components/Calendar";
@@ -71,6 +72,7 @@ export default function Book({ onDone }: { onDone: () => void }) {
   const [address, setAddress] = useState(session.address || "");
   const [addressDetail, setAddressDetail] = useState(session.addressDetail || "");
   const [notes, setNotes] = useState("");
+  const [refCode, setRefCode] = useState(getStoredRef()); // 추천 코드 (딥링크 시 자동 채움)
   const [difficulty, setDifficulty] = useState("normal");
   const [options, setOptions] = useState<string[]>([]);
   const [paying, setPaying] = useState(false);
@@ -230,6 +232,7 @@ export default function Book({ onDone }: { onDone: () => void }) {
         property: buildProperty(),
         difficulty,
         options,
+        ref: refCode.trim(),
       });
       saveReservation({
         id: r.id,
@@ -496,6 +499,19 @@ export default function Book({ onDone }: { onDone: () => void }) {
             </Field>
             <Field label="요청사항 (선택)">
               <textarea className="input" rows={3} placeholder="청소 범위, 오염 정도 등을 알려주세요." value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </Field>
+            <Field label="추천 코드 (선택)">
+              <input
+                className="input"
+                placeholder="소개받은 추천 코드가 있다면 입력하세요"
+                value={refCode}
+                onChange={(e) => {
+                  const v = e.target.value.toUpperCase();
+                  setRefCode(v);
+                  setRef(v); // 저장해 두면 다음에도 자동 적용
+                }}
+                autoCapitalize="characters"
+              />
             </Field>
           </div>
         )}
