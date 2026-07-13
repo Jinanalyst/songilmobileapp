@@ -7,6 +7,54 @@ import {
   type ReferralData,
 } from "../api";
 
+const RATE = 0.035;
+const CALC_PRESETS = [300000, 500000, 1000000];
+
+// 예상 적립금 계산기 — 비율(3.5%)이 아니라 실제 지급 금액을 보여준다.
+function ReferralCalc() {
+  const [amount, setAmount] = useState(300000);
+  const payout = Math.round(amount * RATE);
+  return (
+    <div className="card lg card-pad" style={{ marginTop: 16, borderColor: "var(--brand-200)" }}>
+      <b>💰 얼마를 벌 수 있나요?</b>
+      <div className="flex between center" style={{ marginTop: 10 }}>
+        <div>
+          <p className="tiny muted">청소 계약 금액</p>
+          <b>{formatKRW(amount)}</b>
+        </div>
+        <div className="right" style={{ whiteSpace: "nowrap" }}>
+          <p className="tiny muted">예상 적립금</p>
+          <b className="price" style={{ color: "var(--brand)" }}>약 {formatKRW(payout)}</b>
+        </div>
+      </div>
+      <input
+        type="range"
+        min={100000}
+        max={2000000}
+        step={50000}
+        value={amount}
+        onChange={(e) => setAmount(Number(e.target.value))}
+        style={{ width: "100%", marginTop: 12 }}
+      />
+      <div className="flex gap-8" style={{ marginTop: 10, flexWrap: "wrap" }}>
+        {CALC_PRESETS.map((p) => (
+          <button
+            key={p}
+            className="btn btn-ghost"
+            style={{ padding: "6px 10px", fontSize: "0.8rem" }}
+            onClick={() => setAmount(p)}
+          >
+            {Math.round(p / 10000)}만원 → {formatKRW(Math.round(p * RATE))}
+          </button>
+        ))}
+      </div>
+      <p className="tiny muted" style={{ marginTop: 10, lineHeight: 1.6 }}>
+        추천 링크 첫 예약 1회, 견적의 {(RATE * 100).toFixed(1)}%가 적립돼요. 금액이 클수록 적립금도 커집니다.
+      </p>
+    </div>
+  );
+}
+
 async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
@@ -91,9 +139,12 @@ export default function Referral({ onBack }: { onBack: () => void }) {
         <p className="eyebrow">추천하고 함께 벌기</p>
         <h1 className="title-xl">내 추천 링크</h1>
         <p className="sub small">
-          고객이나 청소 업체를 소개하고, 추천 링크로 들어온 분의 <b>첫 예약</b>에서
-          견적의 <b>3.5%</b>를 적립받으세요.
+          고객이나 청소 업체를 소개하고, 추천 링크로 들어온 분의 <b>첫 예약</b>마다 적립받으세요.
+          <br />
+          <b>30만원 계약이면 약 10,500원, 100만원이면 약 35,000원</b>이 내 적립금이에요.
         </p>
+
+        <ReferralCalc />
 
         {loading && <p className="sub small" style={{ marginTop: 16 }}>불러오는 중…</p>}
 
