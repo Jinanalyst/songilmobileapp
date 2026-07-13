@@ -275,6 +275,35 @@ export async function savePartnerPrices(
 // ══════════════════════════════════════════════════════════════
 // 추천(레퍼럴)·제휴 정산 — GET /api/referral/me, POST /api/referral/payout
 // ══════════════════════════════════════════════════════════════
+export type ReferredType = "customer" | "provider";
+export type CommissionStatus = "pending" | "available" | "paid" | "canceled" | "deducted";
+
+export type ReferralRelation = {
+  id: string;
+  createdAt: string;
+  referredType: ReferredType;
+  referredName: string;
+  status: "active" | "suspended" | "ended";
+  firstCompletedAt: string | null;
+  completedCount: number;
+  grossAmount: number;
+  totalCommission: number;
+};
+export type ReferralCommission = {
+  id: string;
+  createdAt: string;
+  referredType: ReferredType;
+  referredName: string;
+  reservationId: string;
+  sequenceNo: number;
+  isFirst: boolean;
+  baseAmount: number;
+  rate: number;
+  amount: number;
+  status: CommissionStatus;
+  paidAt: string | null;
+};
+
 export type ReferralEarning = {
   id: string;
   createdAt: string;
@@ -288,17 +317,24 @@ export type ReferralEarning = {
 };
 export type ReferralSummary = {
   referredCustomers: number;
-  referredPartners: number;
-  pending: number;
+  referredPartners: number; // = referredProviders (하위호환 별칭)
+  referredProviders?: number;
+  pending: number; // = thisMonthEstimate (하위호환 별칭)
   paid: number;
   total: number;
+  thisMonthEstimate?: number;
+  available?: number;
+  thisMonthCompleted?: number;
 };
 export type ReferralData = {
   code: string;
   link: string;
-  rate: number;
+  rate: number; // 하위호환(첫 완료 거래 요율)
+  settings?: { firstRate: number; repeatRate: number; minPayout: number };
   summary: ReferralSummary;
-  earnings: ReferralEarning[];
+  relations?: ReferralRelation[];
+  commissions?: ReferralCommission[];
+  earnings: ReferralEarning[]; // 하위호환
   payout: { bank: string; account: string; holder: string };
 };
 

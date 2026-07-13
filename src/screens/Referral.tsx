@@ -7,25 +7,43 @@ import {
   type ReferralData,
 } from "../api";
 
-const RATE = 0.035;
 const CALC_PRESETS = [300000, 500000, 1000000];
 
-// 예상 적립금 계산기 — 비율(3.5%)이 아니라 실제 지급 금액을 보여준다.
-function ReferralCalc() {
-  const [amount, setAmount] = useState(300000);
-  const payout = Math.round(amount * RATE);
+function pct(r: number): string {
+  return `${(r * 100).toFixed((r * 100) % 1 === 0 ? 0 : 1)}%`;
+}
+
+// 리커링 수익 구조 안내.
+function RecurringHighlight({ first, repeat }: { first: number; repeat: number }) {
   return (
     <div className="card lg card-pad" style={{ marginTop: 16, borderColor: "var(--brand-200)" }}>
+      <b>💚 이렇게 적립돼요</b>
+      <div className="opt-grid" style={{ marginTop: 10 }}>
+        <div className="card card-pad">
+          <p className="tiny muted">첫 완료 예약</p>
+          <b className="price" style={{ color: "var(--brand)" }}>{pct(first)}</b>
+        </div>
+        <div className="card card-pad">
+          <p className="tiny muted">이후 완료 예약마다</p>
+          <b className="price" style={{ color: "var(--brand)" }}>{pct(repeat)} 리커링</b>
+        </div>
+      </div>
+      <p className="tiny muted" style={{ marginTop: 10, lineHeight: 1.6 }}>
+        정상 계정과 정상 거래가 유지되는 동안 <b>기간 제한 없이</b> 계속 적립됩니다.
+      </p>
+    </div>
+  );
+}
+
+// 예상 적립금 계산기 — 첫 예약과 이후 예약을 함께 보여준다.
+function ReferralCalc({ first, repeat }: { first: number; repeat: number }) {
+  const [amount, setAmount] = useState(400000);
+  return (
+    <div className="card lg card-pad" style={{ marginTop: 16 }}>
       <b>💰 얼마를 벌 수 있나요?</b>
-      <div className="flex between center" style={{ marginTop: 10 }}>
-        <div>
-          <p className="tiny muted">청소 계약 금액</p>
-          <b>{formatKRW(amount)}</b>
-        </div>
-        <div className="right" style={{ whiteSpace: "nowrap" }}>
-          <p className="tiny muted">예상 적립금</p>
-          <b className="price" style={{ color: "var(--brand)" }}>약 {formatKRW(payout)}</b>
-        </div>
+      <div style={{ marginTop: 10 }}>
+        <p className="tiny muted">청소 계약 금액</p>
+        <b>{formatKRW(amount)}</b>
       </div>
       <input
         type="range"
@@ -36,6 +54,16 @@ function ReferralCalc() {
         onChange={(e) => setAmount(Number(e.target.value))}
         style={{ width: "100%", marginTop: 12 }}
       />
+      <div className="opt-grid" style={{ marginTop: 12 }}>
+        <div className="card card-pad center-text">
+          <p className="tiny muted">첫 완료 예약 ({pct(first)})</p>
+          <b className="price" style={{ color: "var(--brand)" }}>{formatKRW(Math.round(amount * first))}</b>
+        </div>
+        <div className="card card-pad center-text">
+          <p className="tiny muted">이후 예약마다 ({pct(repeat)})</p>
+          <b className="price">{formatKRW(Math.round(amount * repeat))}</b>
+        </div>
+      </div>
       <div className="flex gap-8" style={{ marginTop: 10, flexWrap: "wrap" }}>
         {CALC_PRESETS.map((p) => (
           <button
@@ -44,13 +72,10 @@ function ReferralCalc() {
             style={{ padding: "6px 10px", fontSize: "0.8rem" }}
             onClick={() => setAmount(p)}
           >
-            {Math.round(p / 10000)}만원 → {formatKRW(Math.round(p * RATE))}
+            {Math.round(p / 10000)}만원
           </button>
         ))}
       </div>
-      <p className="tiny muted" style={{ marginTop: 10, lineHeight: 1.6 }}>
-        추천 링크 첫 예약 1회, 견적의 {(RATE * 100).toFixed(1)}%가 적립돼요. 금액이 클수록 적립금도 커집니다.
-      </p>
     </div>
   );
 }
@@ -117,6 +142,9 @@ export default function Referral({ onBack }: { onBack: () => void }) {
     doCopy(link, "link");
   }
 
+  const first = data?.settings?.firstRate ?? 0.035;
+  const repeat = data?.settings?.repeatRate ?? 0.02;
+
   const canSave = !!bank && account.replace(/\D/g, "").length >= 6 && !!holder.trim();
 
   async function savePayout() {
@@ -136,15 +164,14 @@ export default function Referral({ onBack }: { onBack: () => void }) {
     <div className="screen">
       <AppBar onBack={onBack} title="추천·제휴" />
       <div className="pad">
-        <p className="eyebrow">추천하고 함께 벌기</p>
+        <p className="eyebrow">한 번 연결하고, 계속 적립</p>
         <h1 className="title-xl">내 추천 링크</h1>
         <p className="sub small">
-          고객이나 청소 업체를 소개하고, 추천 링크로 들어온 분의 <b>첫 예약</b>마다 적립받으세요.
-          <br />
-          <b>30만원 계약이면 약 10,500원, 100만원이면 약 35,000원</b>이 내 적립금이에요.
+          고객이나 청소 업체를 한 번 연결하면, 해당 추천 대상의 <b>정상 완료 거래가 이어질 때마다</b> 수익이 적립돼요.
         </p>
 
-        <ReferralCalc />
+        <RecurringHighlight first={first} repeat={repeat} />
+        <ReferralCalc first={first} repeat={repeat} />
 
         {loading && <p className="sub small" style={{ marginTop: 16 }}>불러오는 중…</p>}
 
@@ -188,20 +215,24 @@ export default function Referral({ onBack }: { onBack: () => void }) {
             {/* 적립 요약 */}
             <div className="opt-grid" style={{ marginTop: 16 }}>
               <div className="card card-pad center-text">
-                <b className="price">{data.summary.referredCustomers}명</b>
-                <p className="tiny muted">추천 고객</p>
+                <b className="price" style={{ color: "var(--brand)" }}>
+                  {formatKRW(data.summary.thisMonthEstimate ?? data.summary.pending)}
+                </b>
+                <p className="tiny muted">이번 달 예상 수익</p>
               </div>
               <div className="card card-pad center-text">
-                <b className="price">{data.summary.referredPartners}곳</b>
-                <p className="tiny muted">추천 업체</p>
+                <b className="price">{formatKRW(data.summary.available ?? 0)}</b>
+                <p className="tiny muted">정산 가능</p>
               </div>
               <div className="card card-pad center-text">
-                <b className="price">{formatKRW(data.summary.pending)}</b>
-                <p className="tiny muted">지급 대기</p>
+                <b className="price">{formatKRW(data.summary.total)}</b>
+                <p className="tiny muted">누적 수익</p>
               </div>
               <div className="card card-pad center-text">
-                <b className="price">{formatKRW(data.summary.paid)}</b>
-                <p className="tiny muted">지급 완료</p>
+                <b className="price">
+                  {data.summary.referredCustomers}·{data.summary.referredProviders ?? data.summary.referredPartners}
+                </b>
+                <p className="tiny muted">추천 고객·업체</p>
               </div>
             </div>
 
@@ -255,7 +286,8 @@ export default function Referral({ onBack }: { onBack: () => void }) {
             )}
 
             <p className="tiny muted center-text" style={{ marginTop: 18, lineHeight: 1.6 }}>
-              추천 대상당 첫 예약 1회 적립되며, 지급은 손길 운영팀이 정산 계좌로 처리해요.
+              추천 대상의 완료 예약마다 리커링 적립되며, 지급은 손길 운영팀이 월 1회 정산 계좌로 처리해요.
+              취소·환불·허위 거래 및 본인 추천 거래는 적립 대상에서 제외됩니다.
             </p>
           </>
         )}
