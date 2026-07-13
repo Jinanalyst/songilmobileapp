@@ -5,6 +5,7 @@ import { AppBar } from "../components/ui";
 import ProfileEdit from "./ProfileEdit";
 import MyReservations from "./MyReservations";
 import PartnerApply from "./PartnerApply";
+import Referral from "./Referral";
 
 const ROLE_LABEL: Record<Role, string> = {
   customer: "고객",
@@ -18,7 +19,7 @@ const PROVIDER_LABEL: Record<string, string> = {
   simple: "간편 로그인",
 };
 
-type View = "home" | "edit" | "reservations" | "apply";
+type View = "home" | "edit" | "reservations" | "apply" | "referral";
 
 function Avatar({ photo, name, size = 56 }: { photo: string; name: string; size?: number }) {
   if (photo) {
@@ -53,6 +54,7 @@ export default function Account({
   if (view === "edit") return <ProfileEdit onBack={() => setView("home")} />;
   if (view === "reservations") return <MyReservations onBack={() => setView("home")} />;
   if (view === "apply") return <PartnerApply onBack={() => setView("home")} />;
+  if (view === "referral") return <Referral onBack={() => setView("home")} />;
 
   async function handleLogout() {
     await logout();
@@ -129,6 +131,20 @@ export default function Account({
             })}
           </div>
         )}
+
+        {/* 추천·제휴 파트너 */}
+        <button
+          className="card lg card-pad flex gap-12 center"
+          style={{ width: "100%", textAlign: "left", marginTop: 16 }}
+          onClick={() => setView("referral")}
+        >
+          <span className="tile">🎁</span>
+          <span className="grow">
+            <b style={{ display: "block" }}>추천·제휴 파트너</b>
+            <span className="small muted">추천 링크 공유하고 견적의 3.5% 적립받기</span>
+          </span>
+          <span style={{ color: "var(--ink-soft)" }}>›</span>
+        </button>
 
         {/* 이용 유형 */}
         <h3 style={{ fontWeight: 900, marginTop: 24 }}>이용 유형</h3>

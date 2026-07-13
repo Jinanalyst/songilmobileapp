@@ -270,6 +270,51 @@ export async function savePartnerPrices(
 }
 
 // ══════════════════════════════════════════════════════════════
+// 추천(레퍼럴)·제휴 정산 — GET /api/referral/me, POST /api/referral/payout
+// ══════════════════════════════════════════════════════════════
+export type ReferralEarning = {
+  id: string;
+  createdAt: string;
+  sourceType: "customer" | "partner";
+  referredName: string;
+  reservationId: string;
+  quoteAmount: number;
+  amount: number;
+  status: "pending" | "paid";
+  paidAt: string | null;
+};
+export type ReferralSummary = {
+  referredCustomers: number;
+  referredPartners: number;
+  pending: number;
+  paid: number;
+  total: number;
+};
+export type ReferralData = {
+  code: string;
+  link: string;
+  rate: number;
+  summary: ReferralSummary;
+  earnings: ReferralEarning[];
+  payout: { bank: string; account: string; holder: string };
+};
+
+// 내 추천 코드·링크·적립 요약·내역·정산 계좌 (로그인 필요).
+export async function fetchReferral(): Promise<ReferralData | null> {
+  const data = await getJsonAuth("/api/referral/me");
+  return (data as ReferralData) ?? null;
+}
+
+// 정산 계좌 저장.
+export async function saveReferralPayout(
+  bank: string,
+  account: string,
+  holder: string
+): Promise<void> {
+  await post("/api/referral/payout", { bank, account, holder });
+}
+
+// ══════════════════════════════════════════════════════════════
 // 소통 스레드 (관리자↔업체 / 관리자↔고객) — GET/POST /api/messages
 // ══════════════════════════════════════════════════════════════
 export type ThreadType = "reservation" | "consultation";
