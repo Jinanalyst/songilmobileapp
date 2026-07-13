@@ -65,7 +65,7 @@ type PTab = "jobs" | "quotes" | "account";
 
 const PTABS: { id: PTab; label: string; icon: string }[] = [
   { id: "jobs", label: "예약", icon: "📅" },
-  { id: "quotes", label: "견적", icon: "🧾" },
+  { id: "quotes", label: "단가", icon: "🧾" },
   { id: "account", label: "계정", icon: "👤" },
 ];
 
@@ -103,12 +103,13 @@ const ATABS: { id: ATab; label: string; icon: string }[] = [
 ];
 
 function AdminShell() {
+  const { logout } = useStore();
   const [tab, setTab] = useState<ATab>("reservations");
   return (
     <div className="app-shell">
-      {tab === "reservations" && <AdminReservations />}
-      {tab === "consultations" && <AdminConsultations />}
-      {tab === "applications" && <AdminApplications />}
+      {tab === "reservations" && <AdminReservations onLogout={logout} />}
+      {tab === "consultations" && <AdminConsultations onLogout={logout} />}
+      {tab === "applications" && <AdminApplications onLogout={logout} />}
 
       <nav className="tabbar">
         {ATABS.map((t) => (

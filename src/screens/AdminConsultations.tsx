@@ -11,7 +11,7 @@ import MessageThread from "../components/MessageThread";
 
 const STATUS_ORDER = ["requested", "consulting", "quoted", "confirmed", "cancelled"];
 
-export default function AdminConsultations() {
+export default function AdminConsultations({ onLogout }: { onLogout?: () => void }) {
   const [rows, setRows] = useState<AdminConsultation[]>([]);
   const [loading, setLoading] = useState(true);
   const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
@@ -67,7 +67,7 @@ export default function AdminConsultations() {
 
   return (
     <div className="screen">
-      <AppBar showLogo title="상담 관리" />
+      <AppBar showLogo title="상담 관리" onLogout={onLogout} />
       <div className="pad">
         <div className="flex between center">
           <h1 className="title-xl">상담 {rows.length}건</h1>

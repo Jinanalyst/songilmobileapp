@@ -4,10 +4,12 @@ export function AppBar({
   onBack,
   title,
   showLogo,
+  onLogout,
 }: {
   onBack?: () => void;
   title?: string;
   showLogo?: boolean;
+  onLogout?: () => void;
 }) {
   return (
     <div className="appbar">
@@ -18,6 +20,15 @@ export function AppBar({
       )}
       {showLogo && <img className="logo" src="logo-mark.png" alt="" />}
       <span className="title">{title ?? "손길"}</span>
+      {onLogout && (
+        <button
+          className="btn btn-ghost"
+          style={{ marginLeft: "auto", padding: "6px 14px", fontSize: "0.85rem" }}
+          onClick={onLogout}
+        >
+          로그아웃
+        </button>
+      )}
     </div>
   );
 }

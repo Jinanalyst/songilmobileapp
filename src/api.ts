@@ -236,6 +236,39 @@ export async function sendPartnerQuote(
   await post("/api/partner/quote", { reservationId, amount, memo });
 }
 
+// ── 파트너 단가표 (GET/POST /api/partner/prices, 로그인 승인 업체) ──
+//  서비스별 시작가를 서버(사이트와 동일 DB)에 저장·조회한다. 웹 설정 화면과 동일 데이터.
+export type PartnerPrice = { id: string; name: string; startPrice: number; note: string };
+export type PartnerPriceList = {
+  partnerId: string;
+  companyName: string;
+  prices: PartnerPrice[];
+};
+
+// 로그인 파트너의 업체별 단가표. 승인 업체가 아니면 approved:false + 빈 목록.
+export async function fetchPartnerPriceLists(): Promise<{
+  lists: PartnerPriceList[];
+  approved: boolean;
+}> {
+  const data = await getJsonAuth("/api/partner/prices");
+  return {
+    lists: (data?.lists ?? []) as PartnerPriceList[],
+    approved: Boolean(data?.approved),
+  };
+}
+
+// 단가표 저장 (본인 승인 업체만). 저장된 단가표를 반환.
+export async function savePartnerPrices(
+  partnerId: string,
+  prices: PartnerPrice[]
+): Promise<PartnerPriceList> {
+  const data = await post<{ list: PartnerPriceList }>("/api/partner/prices", {
+    partnerId,
+    prices,
+  });
+  return data.list;
+}
+
 // ══════════════════════════════════════════════════════════════
 // 소통 스레드 (관리자↔업체 / 관리자↔고객) — GET/POST /api/messages
 // ══════════════════════════════════════════════════════════════

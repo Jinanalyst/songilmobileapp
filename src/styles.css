@@ -49,6 +49,15 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
+/*
+  Flexible 스케일: 루트 font-size 를 기기 화면 너비에 비례(vw)시키면
+  rem 기반 타이포·여백이 전부 함께 커지고 줄어들어 한 화면에 담기는 정도가
+  기기별로 맞춰진다. 기준폭 375px 에서 16px(=4.2667vw).
+  clamp 로 아주 작은 폰(≈15px)·큰 폰/폴더블(≈18px) 양끝을 제한한다.
+*/
+html {
+  font-size: clamp(15px, 4.2667vw, 18px);
+}
 html,
 body,
 #root {

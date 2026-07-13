@@ -11,7 +11,7 @@ import MessageThread from "../components/MessageThread";
 
 const STATUS_ORDER = ["pending", "confirmed", "in_progress", "completed", "cancelled"];
 
-export default function AdminReservations() {
+export default function AdminReservations({ onLogout }: { onLogout?: () => void }) {
   const [rows, setRows] = useState<AdminReservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
@@ -66,7 +66,7 @@ export default function AdminReservations() {
 
   return (
     <div className="screen">
-      <AppBar showLogo title="예약 관리" />
+      <AppBar showLogo title="예약 관리" onLogout={onLogout} />
       <div className="pad">
         <div className="flex between center">
           <h1 className="title-xl">예약 {rows.length}건</h1>

@@ -14,7 +14,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 const STATUS_ORDER = ["reviewing", "approved", "rejected"];
 
-export default function AdminApplications() {
+export default function AdminApplications({ onLogout }: { onLogout?: () => void }) {
   const [rows, setRows] = useState<AdminApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -48,7 +48,7 @@ export default function AdminApplications() {
 
   return (
     <div className="screen">
-      <AppBar showLogo title="파트너 심사" />
+      <AppBar showLogo title="파트너 심사" onLogout={onLogout} />
       <div className="pad">
         <div className="flex between center">
           <h1 className="title-xl">파트너 신청 {rows.length}건</h1>

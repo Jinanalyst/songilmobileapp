@@ -26,6 +26,7 @@ android/capacitor-cordova-android-plugins/
 # misc
 .DS_Store
 *.log
+*.apk
 .env
 .env.local
 
