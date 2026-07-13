@@ -18,6 +18,7 @@ import PartnerAccount from "./screens/PartnerAccount";
 import AdminReservations from "./screens/AdminReservations";
 import AdminConsultations from "./screens/AdminConsultations";
 import AdminApplications from "./screens/AdminApplications";
+import AdminAffiliate from "./screens/AdminAffiliate";
 import { ADMIN_EMAIL } from "./config";
 
 /* ── 고객·게스트 모드 ── */
@@ -95,12 +96,13 @@ function PartnerShell() {
 }
 
 /* ── 운영자(관리자) 모드 ── */
-type ATab = "reservations" | "consultations" | "applications";
+type ATab = "reservations" | "consultations" | "applications" | "affiliate";
 
 const ATABS: { id: ATab; label: string; icon: string }[] = [
   { id: "reservations", label: "예약", icon: "📅" },
   { id: "consultations", label: "상담", icon: "💬" },
   { id: "applications", label: "심사", icon: "🏢" },
+  { id: "affiliate", label: "제휴", icon: "🎁" },
 ];
 
 function AdminShell() {
@@ -111,6 +113,7 @@ function AdminShell() {
       {tab === "reservations" && <AdminReservations onLogout={logout} />}
       {tab === "consultations" && <AdminConsultations onLogout={logout} />}
       {tab === "applications" && <AdminApplications onLogout={logout} />}
+      {tab === "affiliate" && <AdminAffiliate onLogout={logout} />}
 
       <nav className="tabbar">
         {ATABS.map((t) => (

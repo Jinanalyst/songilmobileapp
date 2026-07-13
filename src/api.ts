@@ -353,6 +353,65 @@ export async function saveReferralPayout(
   await post("/api/referral/payout", { bank, account, holder });
 }
 
+// ── 관리자: 추천 커미션 정산 (jangj6091 전용, Bearer) ──
+export type AdminCommission = ReferralCommission & {
+  referrerCode: string;
+  bank: string;
+  account: string;
+  holder: string;
+};
+export type AdminPayout = {
+  id: string;
+  createdAt: string;
+  referrerCode: string;
+  amount: number;
+  count: number;
+  status: string;
+  period: string;
+  bank: string;
+  account: string;
+  holder: string;
+  paidAt: string | null;
+};
+export type AdminReferralsData = {
+  commissions: AdminCommission[];
+  relations: ReferralRelation[];
+  payouts: AdminPayout[];
+  settings: {
+    minPayout: number;
+    firstRate: number;
+    repeatRate: number;
+    platformFeeRate: number;
+  };
+};
+
+// 전체 커미션 + 추천 관계 + 정산 배치 + 설정 (관리자 전용).
+export async function fetchAdminReferrals(): Promise<AdminReferralsData | null> {
+  const data = await getJsonAuth("/api/admin/referrals");
+  return (data as AdminReferralsData) ?? null;
+}
+
+// 커미션 상태 변경 (적립예정→정산가능→지급완료 등).
+export async function markCommission(
+  id: string,
+  status: CommissionStatus
+): Promise<void> {
+  await patch(`/api/admin/referrals/${id}`, { status });
+}
+
+// 특정 추천인의 정산가능(available) 커미션을 묶어 지급 완료 처리.
+export async function createReferralPayout(
+  code: string,
+  period: string
+): Promise<AdminPayout> {
+  const d = await post<{ payout: AdminPayout }>("/api/admin/referrals/actions", {
+    kind: "payout",
+    code,
+    period,
+  });
+  return d.payout;
+}
+
 // ══════════════════════════════════════════════════════════════
 // 소통 스레드 (관리자↔업체 / 관리자↔고객) — GET/POST /api/messages
 // ══════════════════════════════════════════════════════════════
