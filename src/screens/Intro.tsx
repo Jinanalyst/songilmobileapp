@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { formatKRW, DEPOSIT } from "../data";
 
 type Slide = {
   emoji: string;
@@ -16,9 +15,7 @@ const SLIDES: Slide[] = [
   {
     emoji: "📅",
     title: "날짜만 고르면 예약 끝",
-    desc: `원하는 서비스와 방문 날짜·시간을 캘린더에서 고르고, 예약금 ${formatKRW(
-      DEPOSIT
-    )}으로 일정을 확정해요. 잔금은 청소 완료 후 현장에서 결제합니다.`,
+    desc: `원하는 서비스와 방문 날짜·시간을 캘린더에서 고르고, 예약금(견적의 7%)으로 일정을 확정해요. 잔금은 청소 완료 후 현장에서 결제합니다.`,
   },
   {
     emoji: "💬",
@@ -34,12 +31,22 @@ const SLIDES: Slide[] = [
 
 export default function Intro({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0);
-  const last = i === SLIDES.length - 1;
-  const s = SLIDES[i];
+  // 빠른 연타로 인덱스가 범위를 넘어가도(=undefined 슬라이드) 크래시하지 않게 clamp
+  const idx = Math.min(i, SLIDES.length - 1);
+  const last = idx === SLIDES.length - 1;
+  const s = SLIDES[idx];
 
   return (
-    <div className="app-shell">
-      <div className="pad flex between center">
+    // 한 화면에 담기는 인트로: 뷰포트 높이로 고정하고, 넘치면 가운데 영역만
+    // 내부 스크롤 → 상단 로고·하단 버튼은 항상 화면에 보이게 고정된다.
+    <div className="app-shell" style={{ height: "100dvh" }}>
+      <div
+        className="pad flex between center"
+        style={{
+          flexShrink: 0,
+          paddingTop: "calc(20px + env(safe-area-inset-top))",
+        }}
+      >
         <img src="logo-mark.png" alt="" style={{ height: 28, width: 28 }} />
         <button
           className="tiny muted"
@@ -54,9 +61,11 @@ export default function Intro({ onDone }: { onDone: () => void }) {
         className="pad"
         style={{
           flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          justifyContent: "safe center",
           textAlign: "center",
         }}
       >
@@ -64,9 +73,9 @@ export default function Intro({ onDone }: { onDone: () => void }) {
           key={i}
           className="rise"
           style={{
-            fontSize: "4.5rem",
+            fontSize: "clamp(3rem, 14vh, 4.5rem)",
             lineHeight: 1,
-            marginBottom: 26,
+            marginBottom: "clamp(12px, 3vh, 26px)",
           }}
         >
           {s.emoji}
@@ -79,7 +88,13 @@ export default function Intro({ onDone }: { onDone: () => void }) {
         </p>
       </div>
 
-      <div className="pad">
+      <div
+        className="pad"
+        style={{
+          flexShrink: 0,
+          paddingBottom: "calc(20px + env(safe-area-inset-bottom))",
+        }}
+      >
         <div className="flex center" style={{ justifyContent: "center", gap: 7, marginBottom: 18 }}>
           {SLIDES.map((_, idx) => (
             <span
@@ -96,7 +111,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
         </div>
         <button
           className="btn btn-brand btn-block"
-          onClick={() => (last ? onDone() : setI((v) => v + 1))}
+          onClick={() => (last ? onDone() : setI((v) => Math.min(v + 1, SLIDES.length - 1)))}
         >
           {last ? "시작하기" : "다음"}
         </button>

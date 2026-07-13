@@ -109,6 +109,8 @@ export type ReservationInput = {
   addressDetail?: string;
   notes?: string;
   property: Record<string, unknown>;
+  difficulty?: string; // 견적·수수료 계산용 (오염 정도)
+  options?: string[]; // 견적·수수료 계산용 (추가 옵션)
 };
 export async function createReservation(input: ReservationInput) {
   const { reservation } = await post<{ reservation: { id: string } }>(

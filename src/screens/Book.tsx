@@ -3,7 +3,6 @@ import {
   SERVICES,
   PARTNERS,
   TIME_SLOTS,
-  DEPOSIT,
   PAYMENT_NOTICE,
   PROPERTY_TYPES,
   ROOM_OPTIONS,
@@ -15,7 +14,7 @@ import {
   categoryOf,
   propertyLabelOf,
 } from "../data";
-import { DIFFICULTY, OPTIONS, computeEstimate } from "../pricing";
+import { DIFFICULTY, OPTIONS, computeEstimate, platformFee } from "../pricing";
 import { createReservation, fetchAvailability, type BookedSlot } from "../api";
 import { useStore } from "../store";
 import { AppBar, Field } from "../components/ui";
@@ -143,6 +142,8 @@ export default function Book({ onDone }: { onDone: () => void }) {
     date,
     options,
   });
+  // 온라인 결제(예약금) = 손길 플랫폼 수수료 = 견적의 7%
+  const fee = platformFee(est.final);
 
   function toggleOption(id: string) {
     setOptions((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
@@ -227,6 +228,8 @@ export default function Book({ onDone }: { onDone: () => void }) {
         addressDetail,
         notes: buildNotes(),
         property: buildProperty(),
+        difficulty,
+        options,
       });
       saveReservation({
         id: r.id,
@@ -237,6 +240,7 @@ export default function Book({ onDone }: { onDone: () => void }) {
         timeSlot: time,
         pyeong: py,
         customerName: name,
+        fee,
       });
       setDoneId(r.id);
     } catch (e) {
@@ -263,7 +267,7 @@ export default function Book({ onDone }: { onDone: () => void }) {
               <div className="flex between mt-8"><span className="muted small">서비스</span><b>{svc?.emoji} {svc?.name}</b></div>
               <div className="flex between mt-8"><span className="muted small">방문일</span><b>{date} {time}</b></div>
               <div className="flex between mt-8"><span className="muted small">담당 업체</span><b>{partner?.name}</b></div>
-              <div className="flex between mt-8"><span className="muted small">결제한 예약금</span><b className="price">{formatKRW(DEPOSIT)}</b></div>
+              <div className="flex between mt-8"><span className="muted small">결제한 예약금 (견적의 7%)</span><b className="price">{formatKRW(fee)}</b></div>
             </div>
             <button className="btn btn-brand btn-block" style={{ marginTop: 18 }} onClick={onDone}>
               내 예약 보기 →
@@ -533,10 +537,10 @@ export default function Book({ onDone }: { onDone: () => void }) {
             {/* 결제 */}
             <div className="card card-pad" style={{ marginTop: 12, background: "var(--brand-50)", border: "1px solid var(--brand-100)" }}>
               <div className="flex between center">
-                <span style={{ fontWeight: 700 }}>지금 결제 (예약금)</span>
-                <span className="price" style={{ fontSize: "1.3rem" }}>{formatKRW(DEPOSIT)}</span>
+                <span style={{ fontWeight: 700 }}>지금 결제 (예약금·견적의 7%)</span>
+                <span className="price" style={{ fontSize: "1.3rem" }}>{formatKRW(fee)}</span>
               </div>
-              <p className="tiny muted" style={{ marginTop: 6 }}>잔금 {formatKRW(Math.max(0, est.final - DEPOSIT))}은 청소 완료 후 현장에서 결제해요.</p>
+              <p className="tiny muted" style={{ marginTop: 6 }}>잔금 {formatKRW(Math.max(0, est.final - fee))}은 청소 완료 후 현장에서 파트너에게 결제해요.</p>
             </div>
             <div className="notice" style={{ marginTop: 14 }}>{PAYMENT_NOTICE}</div>
             <div className="notice-info" style={{ marginTop: 12 }}>
@@ -557,7 +561,7 @@ export default function Book({ onDone }: { onDone: () => void }) {
             <button className="btn btn-brand grow" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>다음</button>
           ) : (
             <button className="btn btn-brand grow" disabled={paying} onClick={pay}>
-              {paying ? "결제 처리 중…" : `${formatKRW(DEPOSIT)} 결제하고 예약 확정`}
+              {paying ? "결제 처리 중…" : `${formatKRW(fee)} 결제하고 예약 확정`}
             </button>
           )}
         </div>

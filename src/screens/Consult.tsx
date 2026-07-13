@@ -92,7 +92,7 @@ export default function Consult() {
           <span>💡</span>
           <span>
             바로 예약을 원하시면 <b>예약 탭</b>에서 날짜를 골라 예약금
-            {" "}{formatKRW(30000)}으로 확정할 수 있어요.
+            (견적의 7%)으로 확정할 수 있어요.
           </span>
         </div>
       </div>

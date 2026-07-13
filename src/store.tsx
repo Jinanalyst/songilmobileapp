@@ -20,6 +20,7 @@ export type SavedReservation = {
   timeSlot: string;
   pyeong: number;
   customerName: string;
+  fee?: number; // 결제한 예약금(견적의 7%). 구버전 저장분은 없을 수 있음.
 };
 export type SavedConsultation = {
   id: string;
@@ -231,12 +232,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateProfile: (patch) =>
       setState((s) => ({ ...s, session: { ...s.session, ...patch } })),
     logout: async () => {
+      // 로컬 세션을 먼저 즉시 초기화해 화면이 바로 로그아웃되게 한다.
+      // (Supabase signOut 네트워크 호출이 느리거나 실패해도 UI가 멈추지 않도록)
+      setState((s) => ({ ...s, session: { ...DEFAULT_SESSION, seenIntro: true } }));
       try {
         await supabase.auth.signOut();
       } catch {
         /* noop */
       }
-      setState((s) => ({ ...s, session: { ...DEFAULT_SESSION, seenIntro: true } }));
     },
     saveReservation: (r) =>
       setState((s) => ({

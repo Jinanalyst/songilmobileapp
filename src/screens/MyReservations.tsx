@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { STATUS_META, serviceById, partnerById, formatKRW, DEPOSIT } from "../data";
+import { STATUS_META, serviceById, partnerById, formatKRW } from "../data";
 import { useStore, type SavedReservation } from "../store";
 import { AppBar } from "../components/ui";
 import MessageThread from "../components/MessageThread";
@@ -54,7 +54,7 @@ export default function MyReservations({ onBack }: { onBack: () => void }) {
                   <div className="flex between"><span className="muted small">방문일</span><b className="small">{r.date} {r.timeSlot}</b></div>
                   <div className="flex between mt-8"><span className="muted small">담당 업체</span><b className="small">{p?.name ?? "배정 중"}</b></div>
                   <div className="flex between mt-8"><span className="muted small">평수</span><b className="small">{r.pyeong}평</b></div>
-                  <div className="flex between mt-8"><span className="muted small">예약금</span><b className="small price">{formatKRW(DEPOSIT)}</b></div>
+                  <div className="flex between mt-8"><span className="muted small">예약금 (견적의 7%)</span><b className="small price">{r.fee != null ? formatKRW(r.fee) : "견적의 7%"}</b></div>
                   <p className="notice" style={{ marginTop: 12 }}>{meta.desc}</p>
                   <button className="btn btn-outline btn-block" style={{ marginTop: 12 }} onClick={() => setReviewing(r)}>
                     ⭐ 후기 작성하기
