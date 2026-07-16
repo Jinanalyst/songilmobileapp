@@ -87,6 +87,23 @@ export default function Book({ onDone }: { onDone: () => void }) {
     fetchAvailability().then(setBooked).catch(() => setBooked([]));
   }, []);
 
+  // 단계 전환·완료 시 맨 위로 — '다음'을 눌렀을 때 새 단계의 상단부터 보이도록.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step, doneId]);
+
+  // 스크롤을 내리면 우하단에 '맨 위로' 화살표 버튼을 표시.
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 240);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   // 업체+날짜별 예약된 시간대 Set
   const bookedByPartnerDate = useMemo(() => {
     const m = new Map<string, Set<string>>();
@@ -582,6 +599,18 @@ export default function Book({ onDone }: { onDone: () => void }) {
           )}
         </div>
       </div>
+
+      {/* 맨 위로 — 스크롤을 내렸을 때 상단으로 빠르게 이동 */}
+      {showTop && (
+        <button
+          type="button"
+          className="fab-top"
+          aria-label="맨 위로"
+          onClick={scrollToTop}
+        >
+          ↑
+        </button>
+      )}
     </div>
   );
 }
