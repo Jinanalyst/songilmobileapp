@@ -431,6 +431,7 @@ textarea.input {
 .acc-sky { background: #e0f2fe; color: #0284c7; }
 .acc-emerald { background: #d1fae5; color: #059669; }
 .acc-amber { background: #fef3c7; color: #d97706; }
+.acc-violet { background: #ede9fe; color: #7c3aed; }
 
 /* ── 진행 트래커 ── */
 .tracker {

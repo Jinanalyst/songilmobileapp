@@ -159,6 +159,34 @@ function Detail({ p, onBack, onConsult }: { p: Partner; onBack: () => void; onCo
           ))}
         </div>
 
+        {(p.phone || p.linkedin) && (
+          <>
+            <h3 style={{ fontWeight: 900, marginTop: 20 }}>연락처</h3>
+            <div className="stack" style={{ marginTop: 10 }}>
+              {p.phone && (
+                <a
+                  className="card card-pad"
+                  href={`tel:${p.phone.replace(/-/g, "")}`}
+                  style={{ fontWeight: 700, color: "var(--brand-600)", textDecoration: "none" }}
+                >
+                  📞 {p.phone}
+                </a>
+              )}
+              {p.linkedin && (
+                <a
+                  className="card card-pad"
+                  href={p.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontWeight: 700, color: "var(--brand-600)", textDecoration: "none" }}
+                >
+                  🔗 링크드인 프로필 보기
+                </a>
+              )}
+            </div>
+          </>
+        )}
+
         <h3 style={{ fontWeight: 900, marginTop: 20 }}>고객 후기 {reviews.length}건</h3>
         <div className="stack" style={{ marginTop: 10 }}>
           {reviews.map((r, i) => (
