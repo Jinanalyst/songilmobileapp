@@ -3,6 +3,7 @@ import { STATUS_META, PARTNERS, serviceById, formatKRW } from "../data";
 import {
   fetchAdminReservations,
   patchReservation,
+  deleteReservation,
   fetchAdminApprovedPartners,
   type AdminReservation,
 } from "../api";
@@ -59,6 +60,20 @@ export default function AdminReservations({ onLogout }: { onLogout?: () => void 
       setRows((prev) => prev.map((r) => (r.id === id ? updated : r)));
     } catch {
       /* noop */
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // 청소 완료된 예약을 목록에서 영구 삭제.
+  async function remove(id: string) {
+    if (!confirm("이 완료된 예약을 영구 삭제할까요? 되돌릴 수 없어요.")) return;
+    setBusy(id);
+    try {
+      await deleteReservation(id);
+      setRows((prev) => prev.filter((r) => r.id !== id));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "삭제에 실패했어요.");
     } finally {
       setBusy(null);
     }
@@ -123,6 +138,17 @@ export default function AdminReservations({ onLogout }: { onLogout?: () => void 
                   <button className="btn btn-ink btn-block" style={{ marginTop: 12 }} onClick={() => setOpenId(isOpen ? null : r.id)}>
                     {isOpen ? "관리 닫기" : "업체 배정 · 협의가 · 소통"}
                   </button>
+
+                  {r.status === "completed" && (
+                    <button
+                      className="btn btn-outline btn-block"
+                      style={{ marginTop: 10, color: "var(--rose-600)", borderColor: "var(--rose-200)" }}
+                      disabled={busy === r.id}
+                      onClick={() => remove(r.id)}
+                    >
+                      🗑 예약 삭제
+                    </button>
+                  )}
 
                   {isOpen && (
                     <div style={{ marginTop: 12 }}>

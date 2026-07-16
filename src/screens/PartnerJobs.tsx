@@ -170,6 +170,19 @@ function JobDetail({
             청소 완료 처리
           </button>
         )}
+        {job.status === "completed" && (
+          <button
+            className="btn btn-outline btn-block"
+            style={{ marginTop: 16, color: "var(--rose-600)", borderColor: "var(--rose-200)" }}
+            onClick={async () => {
+              if (!confirm("이 완료된 예약을 목록에서 삭제할까요?")) return;
+              await api.removeJob(job.id);
+              onBack();
+            }}
+          >
+            🗑 완료 예약 삭제
+          </button>
+        )}
         {job.status === "declined" && (
           <button className="btn btn-ghost btn-block" style={{ marginTop: 16 }} onClick={() => api.setStatus(job.id, "new")}>
             거절 취소 (다시 신규로)

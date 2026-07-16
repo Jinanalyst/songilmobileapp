@@ -6,6 +6,7 @@ import type { SavedReservation } from "./store";
 import {
   fetchPartnerReservations,
   sendPartnerQuote,
+  deleteReservation,
   type PartnerReservation,
 } from "./api";
 
@@ -207,6 +208,7 @@ export type PartnerJobsApi = {
   jobs: PartnerJob[];
   sendQuote: (id: string, amount: number, memo: string) => void;
   setStatus: (id: string, status: JobStatus) => void;
+  removeJob: (id: string) => Promise<void>;
 };
 
 export function usePartnerJobs(deviceReservations: SavedReservation[]): PartnerJobsApi {
@@ -269,5 +271,16 @@ export function usePartnerJobs(deviceReservations: SavedReservation[]): PartnerJ
   const setStatus = (id: string, status: JobStatus) =>
     setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status } : j)));
 
-  return { jobs, sendQuote, setStatus };
+  // 완료된 예약 삭제 — 서버(배정된 실제 예약)에서 지우고 로컬 목록에서도 제거.
+  // 데모/미배정 건은 서버 삭제가 조용히 실패해도 로컬에서만 제거한다.
+  const removeJob = async (id: string) => {
+    try {
+      await deleteReservation(id);
+    } catch {
+      /* 데모 시드·미배정 건은 서버에 없을 수 있다. 로컬에서만 제거. */
+    }
+    setJobs((prev) => prev.filter((j) => j.id !== id));
+  };
+
+  return { jobs, sendQuote, setStatus, removeJob };
 }

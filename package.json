@@ -1,7 +1,7 @@
 {
   "name": "songil-app",
   "private": true,
-  "version": "1.0.14",
+  "version": "1.0.15",
   "type": "module",
   "description": "손길 — 청소 예약 중개 모바일 앱",
   "scripts": {

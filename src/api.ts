@@ -55,6 +55,23 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
   return data as T;
 }
 
+async function del<T>(path: string): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const headers = { "Content-Type": "application/json", ...(await authHeaders()) };
+  if (native) {
+    const res = await CapacitorHttp.request({ method: "DELETE", url, headers });
+    const data = typeof res.data === "string" ? safeParse(res.data) : res.data;
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error((data as { error?: string })?.error || "요청에 실패했어요.");
+    }
+    return data as T;
+  }
+  const res = await fetch(url, { method: "DELETE", headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as { error?: string }).error || "요청에 실패했어요.");
+  return data as T;
+}
+
 async function getJson(path: string): Promise<any | null> {
   const url = `${API_BASE}${path}`;
   try {
@@ -522,6 +539,26 @@ export async function patchReservation(
     body
   );
   return data.reservation;
+}
+
+// ── 고객 셀프서비스: 본인 예약 취소 (PATCH, 로그인 필요) ──
+export async function cancelReservation(id: string): Promise<void> {
+  await patch(`/api/reservations/${id}`, { action: "cancel" });
+}
+
+// ── 고객 셀프서비스: 본인 예약 시간 변경 (PATCH, 로그인 필요) ──
+//  예약된 시간과 겹치면 서버가 409 로 거절한다.
+export async function rescheduleReservation(
+  id: string,
+  date: string,
+  timeSlot: string
+): Promise<void> {
+  await patch(`/api/reservations/${id}`, { action: "reschedule", date, timeSlot });
+}
+
+// ── 완료된 예약 삭제 (DELETE, 관리자·배정 업체) ──
+export async function deleteReservation(id: string): Promise<void> {
+  await del(`/api/reservations/${id}`);
 }
 
 export async function fetchAdminConsultations(): Promise<AdminConsultation[]> {
