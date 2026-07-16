@@ -73,6 +73,7 @@ type Store = {
   requestPartnerApply: () => void; // 업체 등록 유도 (고객으로 온보딩 + 등록 화면 플래그)
   clearPendingApply: () => void;
   logout: () => Promise<void>;
+  resetLocalData: () => Promise<void>; // 회원 탈퇴: 이 기기의 모든 계정 데이터 삭제
   saveReservation: (r: SavedReservation) => void;
   saveConsultation: (c: SavedConsultation) => void;
   saveApplication: (a: SavedApplication) => void;
@@ -235,6 +236,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // 로컬 세션을 먼저 즉시 초기화해 화면이 바로 로그아웃되게 한다.
       // (Supabase signOut 네트워크 호출이 느리거나 실패해도 UI가 멈추지 않도록)
       setState((s) => ({ ...s, session: { ...DEFAULT_SESSION, seenIntro: true } }));
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        /* noop */
+      }
+    },
+    resetLocalData: async () => {
+      // 회원 탈퇴 시 이 기기에 저장된 세션·제출 내역을 모두 초기화한다.
+      // (서버 계정 삭제는 화면에서 deleteAccount API 로 먼저 처리)
+      setState({
+        session: { ...DEFAULT_SESSION, seenIntro: true },
+        submissions: { reservations: [], consultations: [], applications: [] },
+      });
       try {
         await supabase.auth.signOut();
       } catch {

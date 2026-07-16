@@ -6,6 +6,7 @@ import ProfileEdit from "./ProfileEdit";
 import MyReservations from "./MyReservations";
 import PartnerApply from "./PartnerApply";
 import Referral from "./Referral";
+import DeleteAccount from "./DeleteAccount";
 
 const ROLE_LABEL: Record<Role, string> = {
   customer: "고객",
@@ -19,7 +20,7 @@ const PROVIDER_LABEL: Record<string, string> = {
   simple: "간편 로그인",
 };
 
-type View = "home" | "edit" | "reservations" | "apply" | "referral";
+type View = "home" | "edit" | "reservations" | "apply" | "referral" | "delete";
 
 function Avatar({ photo, name, size = 56 }: { photo: string; name: string; size?: number }) {
   if (photo) {
@@ -55,6 +56,8 @@ export default function Account({
   if (view === "reservations") return <MyReservations onBack={() => setView("home")} />;
   if (view === "apply") return <PartnerApply onBack={() => setView("home")} />;
   if (view === "referral") return <Referral onBack={() => setView("home")} />;
+  if (view === "delete")
+    return <DeleteAccount onBack={() => setView("home")} onDeleted={onLogout} />;
 
   async function handleLogout() {
     await logout();
@@ -204,6 +207,12 @@ export default function Account({
         </div>
 
         <button className="btn btn-ghost btn-block" style={{ marginTop: 18 }} onClick={handleLogout}>로그아웃</button>
+        <button
+          style={{ display: "block", margin: "16px auto 0", background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)", fontSize: "0.85rem", textDecoration: "underline" }}
+          onClick={() => setView("delete")}
+        >
+          회원 탈퇴
+        </button>
         <p className="tiny muted center-text" style={{ marginTop: 14 }}>© 2026 {COMPANY.service} · {COMPANY.bizName}</p>
       </div>
     </div>

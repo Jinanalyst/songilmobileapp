@@ -184,6 +184,14 @@ export async function createApplication(input: ApplicationInput) {
   return application;
 }
 
+// ── 회원 탈퇴 (POST /api/account/delete, 로그인 필요) ──
+//  로그인한 본인 계정과 연결된 개인정보를 파기하고 Supabase 인증 계정을 삭제한다.
+//  Bearer 토큰(authHeaders)으로 본인 확인 → 소셜/이메일 로그인 계정에만 유효.
+//  간편·게스트 로그인은 서버 계정이 없으므로 호출하지 않고 로컬 데이터만 지운다.
+export async function deleteAccount(): Promise<void> {
+  await post("/api/account/delete", { confirm: true });
+}
+
 // ── 후기 작성 (POST /api/reviews, 로그인 필요) ──
 export type ReviewInput = {
   reservationId: string;
