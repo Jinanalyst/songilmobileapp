@@ -98,7 +98,7 @@ export default function PartnerApply({ onBack }: { onBack: () => void }) {
         <div className="card lg card-pad" style={{ marginTop: 18 }}>
           <div className="row-2">
             <Field label="업체명" required>
-              <input className="input" value={f.companyName} onChange={(e) => set({ companyName: e.target.value })} placeholder="반짝살림" />
+              <input className="input" value={f.companyName} onChange={(e) => set({ companyName: e.target.value })} placeholder="OO클린" />
             </Field>
             <Field label="대표자명" required>
               <input className="input" value={f.ownerName} onChange={(e) => set({ ownerName: e.target.value })} placeholder="홍길동" />
